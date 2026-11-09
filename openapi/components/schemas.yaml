@@ -1,0 +1,2412 @@
+Ulid:
+  type: string
+  description: Identifiant ULID (alphabet Crockford, majuscules).
+  pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+  examples: ['01JCXK8H0V3Q8T1Q4M7R2N5W6Y']
+
+Decimal:
+  type: string
+  description: Nombre décimal exact transmis en chaîne (jamais en nombre JSON).
+  pattern: '^-?\d+(\.\d{1,8})?$'
+  examples: ['100000', '33333.33333333']
+
+CurrencyCode:
+  type: string
+  description: Code devise ISO 4217.
+  pattern: '^[A-Z]{3}$'
+  examples: ['XOF']
+
+Money:
+  type: object
+  required: [amount, currency]
+  additionalProperties: false
+  properties:
+    amount:
+      $ref: '#/Decimal'
+    currency:
+      $ref: '#/CurrencyCode'
+
+PaginationMeta:
+  type: object
+  required: [page, per_page, total, last_page]
+  properties:
+    page: { type: integer, minimum: 1 }
+    per_page: { type: integer, minimum: 1, maximum: 100 }
+    total: { type: integer, minimum: 0 }
+    last_page: { type: integer, minimum: 1 }
+
+HealthStatus:
+  type: object
+  required: [status]
+  additionalProperties: false
+  properties:
+    status:
+      type: string
+      enum: [ok, degraded]
+
+Problem:
+  type: object
+  required: [type, title, status, code]
+  properties:
+    type: { type: string, format: uri }
+    title: { type: string }
+    status: { type: integer }
+    code:
+      type: string
+      description: Code d'erreur stable (docs/05-contrats-api.md §1.6).
+      examples: [validation_failed, insufficient_stock, idempotency_conflict]
+    detail: { type: string }
+    instance: { type: string }
+    request_id: { $ref: '#/Ulid' }
+    meta:
+      type: object
+      additionalProperties: true
+    errors:
+      type: array
+      items:
+        type: object
+        required: [code]
+        properties:
+          pointer: { type: string }
+          code: { type: string }
+          message: { type: string }
+          meta:
+            type: object
+            additionalProperties: true
+
+# --- Lot 1 : plateforme, identité, accès -----------------------------------
+
+DateTime:
+  type: string
+  format: date-time
+  examples: ['2026-11-05T10:15:00Z']
+
+CompanySummary:
+  type: object
+  required: [id, code, trade_name, status, reference_currency, timezone]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    code: { type: string }
+    trade_name: { type: string }
+    status: { type: string, enum: [provisioning, active, suspended, archived] }
+    reference_currency: { $ref: '#/CurrencyCode' }
+    timezone: { type: string }
+
+Me:
+  type: object
+  required: [user, company, permissions]
+  additionalProperties: false
+  properties:
+    user:
+      type: object
+      required: [id, name, email, is_super_admin, theme]
+      additionalProperties: false
+      properties:
+        id: { $ref: '#/Ulid' }
+        name: { type: string }
+        email: { type: string, format: email }
+        is_super_admin: { type: boolean }
+        theme: { $ref: '#/Theme' }
+    company:
+      description: Entreprise active (null pour un super-admin qui n'en a pas choisi).
+      oneOf:
+        - { $ref: '#/CompanySummary' }
+        - { type: 'null' }
+    permissions:
+      type: array
+      items: { type: string }
+
+Theme:
+  type: string
+  enum: [system, light, dark]
+
+RoleRef:
+  type: object
+  required: [id, name]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    name: { type: [string, 'null'] }
+
+User:
+  type: object
+  required: [id, name, email, phone, status, last_login_at, roles]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    name: { type: string }
+    email: { type: string, format: email }
+    phone: { type: [string, 'null'] }
+    status: { type: string, enum: [invited, active, disabled] }
+    last_login_at: { type: [string, 'null'], format: date-time }
+    roles:
+      type: array
+      items: { $ref: '#/RoleRef' }
+
+Invitation:
+  type: object
+  required: [id, email, role, status, expires_at, created_at]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    email: { type: string, format: email }
+    role: { $ref: '#/RoleRef' }
+    status: { type: string, enum: [pending, accepted, revoked, expired] }
+    expires_at: { $ref: '#/DateTime' }
+    created_at: { $ref: '#/DateTime' }
+
+Role:
+  type: object
+  required: [id, name, is_system, template_code, locked, permissions]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    name: { type: string }
+    is_system: { type: boolean }
+    template_code: { type: [string, 'null'], enum: [company_admin, seller, storekeeper, accountant, null] }
+    locked: { type: boolean, description: 'Rôle Administrateur, non modifiable.' }
+    permissions:
+      type: array
+      items: { type: string }
+
+Permission:
+  type: object
+  required: [name, module, label, is_sensitive]
+  additionalProperties: false
+  properties:
+    name: { type: string, examples: [users.manage] }
+    module: { type: string }
+    label: { type: string }
+    is_sensitive: { type: boolean }
+
+CompanyIdentity:
+  type: object
+  properties:
+    trade_name: { type: string, minLength: 2, maxLength: 160 }
+    legal_name: { type: [string, 'null'], maxLength: 200 }
+    ninea: { type: [string, 'null'], maxLength: 32 }
+    rccm: { type: [string, 'null'], maxLength: 64 }
+    address: { type: [string, 'null'], maxLength: 255 }
+    city: { type: [string, 'null'], maxLength: 100 }
+    country_code: { type: string, minLength: 2, maxLength: 2 }
+    phone: { type: [string, 'null'], maxLength: 32 }
+    email: { type: [string, 'null'], format: email, maxLength: 190 }
+
+Company:
+  type: object
+  required: [id, code, trade_name, legal_name, ninea, rccm, address, city, country_code, phone, email, reference_currency, timezone, status, suspended_at, suspension_reason, created_at]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    code: { type: string }
+    trade_name: { type: string }
+    legal_name: { type: [string, 'null'] }
+    ninea: { type: [string, 'null'] }
+    rccm: { type: [string, 'null'] }
+    address: { type: [string, 'null'] }
+    city: { type: [string, 'null'] }
+    country_code: { type: string }
+    phone: { type: [string, 'null'] }
+    email: { type: [string, 'null'] }
+    reference_currency: { $ref: '#/CurrencyCode' }
+    timezone: { type: string }
+    status: { type: string, enum: [provisioning, active, suspended, archived] }
+    suspended_at: { type: [string, 'null'], format: date-time }
+    suspension_reason: { type: [string, 'null'] }
+    created_at: { $ref: '#/DateTime' }
+
+CompanySettings:
+  type: object
+  required: [identity, settings]
+  additionalProperties: false
+  properties:
+    identity:
+      allOf:
+        - { $ref: '#/CompanyIdentity' }
+        - type: object
+          required: [code, reference_currency]
+          properties:
+            code: { type: string }
+            reference_currency: { $ref: '#/CurrencyCode' }
+    settings:
+      type: object
+      required: [default_payment_terms_days, rounding_mode, low_stock_default_threshold, invoice_legal_mentions, invoice_footer, payment_instructions, start_date, allow_self_approval]
+      additionalProperties: false
+      properties:
+        default_payment_terms_days: { type: integer, minimum: 0, maximum: 365 }
+        rounding_mode: { type: string, enum: [half_up] }
+        low_stock_default_threshold: { type: integer, minimum: 0 }
+        invoice_legal_mentions: { type: [string, 'null'], description: 'Mentions légales — VÉRIF. RÉGL. (VR-01)' }
+        invoice_footer: { type: [string, 'null'] }
+        payment_instructions: { type: [string, 'null'] }
+        start_date: { type: [string, 'null'], format: date }
+        allow_self_approval: { type: boolean }
+
+DocumentSequenceFormat:
+  type: object
+  required: [doc_type, prefix, padding]
+  additionalProperties: false
+  properties:
+    doc_type:
+      type: string
+      enum: [invoice, credit_note, receipt, quotation, sales_order, delivery, return, purchase_order, supplier_bill, supplier_payment, shipment, goods_receipt, stock_lot, adjustment, inventory, transfer, expense, account_transfer, approval_request]
+    prefix: { type: string, pattern: '^[A-Z0-9]{1,12}$' }
+    padding: { type: integer, minimum: 1, maximum: 10 }
+
+ExchangeRate:
+  type: object
+  required: [id, from_currency, to_currency, rate, valid_on, source]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    from_currency: { $ref: '#/CurrencyCode' }
+    to_currency: { $ref: '#/CurrencyCode' }
+    rate: { $ref: '#/Decimal', description: '1 unité de from_currency = rate unités de to_currency' }
+    valid_on: { type: string, format: date }
+    source: { type: [string, 'null'] }
+
+TaxRate:
+  type: object
+  required: [id, name, rate, is_active]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    name: { type: string }
+    rate: { $ref: '#/Decimal', description: 'Pourcentage (0 à 100).' }
+    is_active: { type: boolean }
+
+AuditLog:
+  type: object
+  required: [id, company_id, user_id, impersonated_company_id, action, subject_type, subject_id, old_values, new_values, reason, ip_address, request_id, occurred_at]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    company_id: { type: [string, 'null'] }
+    user_id: { type: [string, 'null'] }
+    impersonated_company_id: { type: [string, 'null'] }
+    action: { type: string, examples: [user.updated, auth.login_failed] }
+    subject_type: { type: [string, 'null'] }
+    subject_id: { type: [string, 'null'] }
+    old_values: { type: [object, 'null'] }
+    new_values: { type: [object, 'null'] }
+    reason: { type: [string, 'null'] }
+    ip_address: { type: [string, 'null'] }
+    request_id: { type: [string, 'null'] }
+    occurred_at: { $ref: '#/DateTime' }
+
+Message:
+  type: object
+  required: [data]
+  additionalProperties: false
+  properties:
+    data:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string }
+
+MeEnvelope:
+  type: object
+  required: [data]
+  additionalProperties: false
+  properties:
+    data: { $ref: '#/Me' }
+
+CompanyEnvelope:
+  type: object
+  required: [data]
+  additionalProperties: false
+  properties:
+    data: { $ref: '#/Company' }
+
+CompanyList:
+  type: object
+  required: [data, meta]
+  additionalProperties: false
+  properties:
+    data: { type: array, items: { $ref: '#/Company' } }
+    meta: { $ref: '#/PaginationMeta' }
+
+UserEnvelope:
+  type: object
+  required: [data]
+  additionalProperties: false
+  properties:
+    data: { $ref: '#/User' }
+
+UserList:
+  type: object
+  required: [data, meta]
+  additionalProperties: false
+  properties:
+    data: { type: array, items: { $ref: '#/User' } }
+    meta: { $ref: '#/PaginationMeta' }
+
+InvitationEnvelope:
+  type: object
+  required: [data]
+  additionalProperties: false
+  properties:
+    data: { $ref: '#/Invitation' }
+
+InvitationList:
+  type: object
+  required: [data, meta]
+  additionalProperties: false
+  properties:
+    data: { type: array, items: { $ref: '#/Invitation' } }
+    meta: { $ref: '#/PaginationMeta' }
+
+RoleEnvelope:
+  type: object
+  required: [data]
+  additionalProperties: false
+  properties:
+    data: { $ref: '#/Role' }
+
+RoleList:
+  type: object
+  required: [data]
+  additionalProperties: false
+  properties:
+    data: { type: array, items: { $ref: '#/Role' } }
+
+PermissionList:
+  type: object
+  required: [data]
+  additionalProperties: false
+  properties:
+    data: { type: array, items: { $ref: '#/Permission' } }
+
+CompanySettingsEnvelope:
+  type: object
+  required: [data]
+  additionalProperties: false
+  properties:
+    data: { $ref: '#/CompanySettings' }
+
+DocumentSequenceFormatList:
+  type: object
+  required: [data]
+  additionalProperties: false
+  properties:
+    data: { type: array, items: { $ref: '#/DocumentSequenceFormat' } }
+
+ExchangeRateEnvelope:
+  type: object
+  required: [data]
+  additionalProperties: false
+  properties:
+    data: { $ref: '#/ExchangeRate' }
+
+ExchangeRateList:
+  type: object
+  required: [data, meta]
+  additionalProperties: false
+  properties:
+    data: { type: array, items: { $ref: '#/ExchangeRate' } }
+    meta: { $ref: '#/PaginationMeta' }
+
+TaxRateEnvelope:
+  type: object
+  required: [data]
+  additionalProperties: false
+  properties:
+    data: { $ref: '#/TaxRate' }
+
+TaxRateList:
+  type: object
+  required: [data]
+  additionalProperties: false
+  properties:
+    data: { type: array, items: { $ref: '#/TaxRate' } }
+
+AuditLogList:
+  type: object
+  required: [data, meta]
+  additionalProperties: false
+  properties:
+    data: { type: array, items: { $ref: '#/AuditLog' } }
+    meta: { $ref: '#/PaginationMeta' }
+
+ActiveCompany:
+  type: object
+  required: [data]
+  additionalProperties: false
+  properties:
+    data:
+      type: object
+      required: [company]
+      properties:
+        company:
+          oneOf:
+            - { $ref: '#/CompanySummary' }
+            - { type: 'null' }
+
+# --- Lot 2 : catalogue et stocks ------------------------------------------
+
+Category:
+  type: object
+  required: [id, parent_id, name, path, is_active]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    parent_id: { type: [string, 'null'] }
+    name: { type: string }
+    path: { type: string, description: 'Chemin matérialisé /id1/id2/' }
+    is_active: { type: boolean }
+
+Attribute:
+  type: object
+  required: [id, name, values]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    name: { type: string }
+    values:
+      type: array
+      items:
+        type: object
+        required: [id, value, position]
+        additionalProperties: false
+        properties:
+          id: { $ref: '#/Ulid' }
+          value: { type: string }
+          position: { type: integer }
+
+VariantUnit:
+  type: object
+  required: [id, variant_id, code, label, factor, barcode, is_sellable, locked]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    variant_id: { $ref: '#/Ulid' }
+    code: { type: string, examples: [piece, carton] }
+    label: { type: string }
+    factor: { type: integer, minimum: 1, description: "Nombre d'unités de base (pièces)" }
+    barcode: { type: [string, 'null'] }
+    is_sellable: { type: boolean }
+    locked: { type: boolean, description: 'Facteur figé (conditionnement déjà utilisé, CAT-007)' }
+
+ProductVariant:
+  type: object
+  required: [id, product_id, sku, label, is_default, pieces_per_carton, low_stock_threshold, status, attribute_value_ids, units]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    product_id: { $ref: '#/Ulid' }
+    sku: { type: string }
+    label: { type: string }
+    is_default: { type: boolean }
+    pieces_per_carton: { type: [integer, 'null'] }
+    low_stock_threshold: { type: [integer, 'null'] }
+    status: { type: string, enum: [active, inactive] }
+    attribute_value_ids: { type: array, items: { $ref: '#/Ulid' } }
+    units: { type: array, items: { $ref: '#/VariantUnit' } }
+
+ProductImage:
+  type: object
+  required: [id, variant_id, position, url, thumbnail_url]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    variant_id: { type: [string, 'null'] }
+    position: { type: integer }
+    url: { type: string }
+    thumbnail_url: { type: string }
+
+ProductSummary:
+  type: object
+  required: [id, reference, name, description, category, product_type, base_unit_label, has_variants, status, has_history, version, thumbnail_url]
+  properties:
+    id: { $ref: '#/Ulid' }
+    reference: { type: string }
+    name: { type: string }
+    description: { type: [string, 'null'] }
+    category:
+      oneOf:
+        - type: object
+          required: [id, name]
+          properties:
+            id: { $ref: '#/Ulid' }
+            name: { type: string }
+        - { type: 'null' }
+    product_type: { type: string, enum: [stock, service] }
+    base_unit_label: { type: string }
+    has_variants: { type: boolean }
+    status: { type: string, enum: [active, inactive, archived] }
+    has_history: { type: boolean }
+    version: { type: integer }
+    thumbnail_url: { type: [string, 'null'] }
+
+Product:
+  allOf:
+    - $ref: '#/ProductSummary'
+    - type: object
+      required: [variants, images]
+      properties:
+        variants: { type: array, items: { $ref: '#/ProductVariant' } }
+        images: { type: array, items: { $ref: '#/ProductImage' } }
+
+PriceList:
+  type: object
+  required: [id, code, name, currency, is_default]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    code: { type: string }
+    name: { type: string }
+    currency: { $ref: '#/CurrencyCode' }
+    is_default: { type: boolean }
+
+ProductPrice:
+  type: object
+  required: [id, variant_id, price_list_id, unit_id, price, valid_from, valid_to]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    variant_id: { $ref: '#/Ulid' }
+    price_list_id: { $ref: '#/Ulid' }
+    unit_id: { $ref: '#/Ulid' }
+    price: { $ref: '#/Money' }
+    valid_from: { type: string, format: date }
+    valid_to: { type: [string, 'null'], format: date }
+
+PriceQuote:
+  type: object
+  required: [price, source, price_list_id, unit_id, factor]
+  additionalProperties: false
+  properties:
+    price: { $ref: '#/Money' }
+    source: { type: string, enum: [list, derived], description: 'derived : prix pièce × facteur (CAT-004)' }
+    price_list_id: { $ref: '#/Ulid' }
+    unit_id: { $ref: '#/Ulid' }
+    factor: { type: integer }
+
+VariantRef:
+  type: object
+  required: [id, product_id, reference, product_name, sku, label]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    product_id: { $ref: '#/Ulid' }
+    reference: { type: string }
+    product_name: { type: string }
+    sku: { type: string }
+    label: { type: string }
+
+Warehouse:
+  type: object
+  required: [id, code, name, address, status, is_default]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    code: { type: string }
+    name: { type: string }
+    address: { type: [string, 'null'] }
+    status: { type: string, enum: [active, inactive] }
+    is_default: { type: boolean }
+
+StockPosition:
+  type: object
+  required: [warehouse_id, variant, on_hand, reserved, blocked, in_delivery, available, expected, in_transit, low_stock_threshold, is_low]
+  additionalProperties: false
+  description: 'disponible = physique − réservé − bloqué − en livraison (docs/04 §4.1) ; attendu et en transit ne sont jamais vendables.'
+  properties:
+    warehouse_id: { $ref: '#/Ulid' }
+    variant:
+      oneOf:
+        - { $ref: '#/VariantRef' }
+        - { type: 'null' }
+    on_hand: { type: integer }
+    reserved: { type: integer }
+    blocked: { type: integer }
+    in_delivery: { type: integer }
+    available: { type: integer }
+    expected: { type: integer }
+    in_transit: { type: integer }
+    low_stock_threshold: { type: integer }
+    is_low: { type: boolean }
+
+UnitCost:
+  type: object
+  required: [amount, currency]
+  properties:
+    amount: { $ref: '#/Decimal' }
+    currency: { $ref: '#/CurrencyCode' }
+
+StockLot:
+  type: object
+  required: [id, lot_number, warehouse_id, variant_id, origin_type, received_at, initial_qty, on_hand, blocked, in_delivery, free, cost_status]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    lot_number: { type: string }
+    warehouse_id: { $ref: '#/Ulid' }
+    variant_id: { $ref: '#/Ulid' }
+    origin_type: { type: string, enum: [receipt, opening, adjustment] }
+    received_at: { $ref: '#/DateTime' }
+    initial_qty: { type: integer }
+    on_hand: { type: integer }
+    blocked: { type: integer }
+    in_delivery: { type: integer }
+    free: { type: integer }
+    cost_status: { type: string, enum: [provisional, final] }
+    unit_cost: { $ref: '#/UnitCost', description: 'Absent sans products.view_sensitive (GEN-005)' }
+
+StockMovement:
+  type: object
+  required: [id, warehouse_id, variant_id, lot_id, lot_number, movement_type, quantity, source_type, source_id, reverses_movement_id, reason, occurred_at]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    warehouse_id: { $ref: '#/Ulid' }
+    variant_id: { $ref: '#/Ulid' }
+    lot_id: { $ref: '#/Ulid' }
+    lot_number: { type: string }
+    movement_type: { type: string, enum: [receipt, sale_delivery, return_in, transfer_in, transfer_out, adjustment_in, adjustment_out, loss, opening, reversal] }
+    quantity: { type: integer, description: 'Signée : + entrée, − sortie' }
+    source_type: { type: string }
+    source_id: { $ref: '#/Ulid' }
+    reverses_movement_id: { type: [string, 'null'] }
+    reason: { type: [string, 'null'] }
+    occurred_at: { $ref: '#/DateTime' }
+    unit_cost: { $ref: '#/UnitCost' }
+    total_cost: { $ref: '#/Money' }
+
+RedactedMeta:
+  allOf:
+    - $ref: '#/PaginationMeta'
+    - type: object
+      required: [redacted]
+      properties:
+        redacted: { type: array, items: { type: string }, description: 'Champs masqués faute de permission sensible' }
+
+StockAdjustment:
+  type: object
+  required: [id, number, warehouse_id, inventory_id, transfer_id, status, reason, posted_at, version, created_at]
+  properties:
+    id: { $ref: '#/Ulid' }
+    number: { type: string, examples: [AJU-2026-0001] }
+    warehouse_id: { $ref: '#/Ulid' }
+    inventory_id: { type: [string, 'null'] }
+    transfer_id: { type: [string, 'null'] }
+    status: { type: string, enum: [draft, pending_approval, posted, rejected, cancelled] }
+    reason: { type: [string, 'null'] }
+    posted_at: { type: [string, 'null'], format: date-time }
+    version: { type: integer }
+    created_at: { $ref: '#/DateTime' }
+    lines:
+      type: array
+      items:
+        type: object
+        required: [id, variant, lot_id, lot_number, quantity, kind]
+        properties:
+          id: { $ref: '#/Ulid' }
+          variant: { oneOf: [{ $ref: '#/VariantRef' }, { type: 'null' }] }
+          lot_id: { type: [string, 'null'] }
+          lot_number: { type: [string, 'null'] }
+          quantity: { type: integer }
+          kind: { type: string, enum: [gain, loss, damage, correction] }
+          unit_cost: { type: [string, 'null'] }
+
+Inventory:
+  type: object
+  required: [id, number, warehouse_id, scope, variant_ids, status, snapshot_at, validated_at, adjustment_id, note, version, created_at]
+  properties:
+    id: { $ref: '#/Ulid' }
+    number: { type: string }
+    warehouse_id: { $ref: '#/Ulid' }
+    scope: { type: string, enum: [full, partial] }
+    variant_ids: { type: array, items: { $ref: '#/Ulid' } }
+    status: { type: string, enum: [draft, counting, review, validated, cancelled] }
+    snapshot_at: { type: [string, 'null'], format: date-time }
+    validated_at: { type: [string, 'null'], format: date-time }
+    adjustment_id: { type: [string, 'null'] }
+    note: { type: [string, 'null'] }
+    version: { type: integer }
+    created_at: { $ref: '#/DateTime' }
+    lines:
+      type: array
+      items:
+        type: object
+        required: [id, variant, lot_id, lot_number, qty_expected, qty_moved_since_snapshot, qty_counted, difference, counted_at, note]
+        properties:
+          id: { $ref: '#/Ulid' }
+          variant: { oneOf: [{ $ref: '#/VariantRef' }, { type: 'null' }] }
+          lot_id: { type: [string, 'null'] }
+          lot_number: { type: [string, 'null'] }
+          qty_expected: { type: integer }
+          qty_moved_since_snapshot: { type: integer }
+          qty_counted: { type: [integer, 'null'] }
+          difference: { type: [integer, 'null'], description: 'compté − (théorique + mouvements depuis le figeage), INV-102' }
+          counted_at: { type: [string, 'null'], format: date-time }
+          note: { type: [string, 'null'] }
+
+StockTransfer:
+  type: object
+  required: [id, number, from_warehouse_id, to_warehouse_id, status, shipped_at, received_at, note, version, created_at]
+  properties:
+    id: { $ref: '#/Ulid' }
+    number: { type: string }
+    from_warehouse_id: { $ref: '#/Ulid' }
+    to_warehouse_id: { $ref: '#/Ulid' }
+    status: { type: string, enum: [draft, confirmed, in_transit, received, cancelled] }
+    shipped_at: { type: [string, 'null'], format: date-time }
+    received_at: { type: [string, 'null'], format: date-time }
+    note: { type: [string, 'null'] }
+    version: { type: integer }
+    created_at: { $ref: '#/DateTime' }
+    lines:
+      type: array
+      items:
+        type: object
+        required: [id, variant, lot_id, lot_number, qty_requested, qty_sent, qty_received, qty_discrepancy]
+        properties:
+          id: { $ref: '#/Ulid' }
+          variant: { oneOf: [{ $ref: '#/VariantRef' }, { type: 'null' }] }
+          lot_id: { type: [string, 'null'] }
+          lot_number: { type: [string, 'null'] }
+          qty_requested: { type: integer }
+          qty_sent: { type: integer }
+          qty_received: { type: integer }
+          qty_discrepancy: { type: integer }
+
+CategoryList:
+  type: object
+  required: [data]
+  properties:
+    data: { type: array, items: { $ref: '#/Category' } }
+
+AttributeList:
+  type: object
+  required: [data]
+  properties:
+    data: { type: array, items: { $ref: '#/Attribute' } }
+
+ProductEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/Product' }
+
+ProductSummaryPage:
+  type: object
+  required: [data, meta]
+  properties:
+    data: { type: array, items: { $ref: '#/ProductSummary' } }
+    meta: { $ref: '#/PaginationMeta' }
+
+ProductVariantEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/ProductVariant' }
+
+ProductVariantList:
+  type: object
+  required: [data]
+  properties:
+    data: { type: array, items: { $ref: '#/ProductVariant' } }
+
+VariantUnitEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/VariantUnit' }
+
+VariantUnitList:
+  type: object
+  required: [data]
+  properties:
+    data: { type: array, items: { $ref: '#/VariantUnit' } }
+
+ProductImageEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/ProductImage' }
+
+PriceListEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/PriceList' }
+
+PriceListList:
+  type: object
+  required: [data]
+  properties:
+    data: { type: array, items: { $ref: '#/PriceList' } }
+
+ProductPriceEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/ProductPrice' }
+
+ProductPriceList:
+  type: object
+  required: [data]
+  properties:
+    data: { type: array, items: { $ref: '#/ProductPrice' } }
+
+PriceQuoteEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/PriceQuote' }
+
+WarehouseEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/Warehouse' }
+
+WarehouseList:
+  type: object
+  required: [data]
+  properties:
+    data: { type: array, items: { $ref: '#/Warehouse' } }
+
+StockAdjustmentEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/StockAdjustment' }
+
+StockAdjustmentPage:
+  type: object
+  required: [data, meta]
+  properties:
+    data: { type: array, items: { $ref: '#/StockAdjustment' } }
+    meta: { $ref: '#/PaginationMeta' }
+
+InventoryEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/Inventory' }
+
+InventoryPage:
+  type: object
+  required: [data, meta]
+  properties:
+    data: { type: array, items: { $ref: '#/Inventory' } }
+    meta: { $ref: '#/PaginationMeta' }
+
+StockTransferEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/StockTransfer' }
+
+StockTransferPage:
+  type: object
+  required: [data, meta]
+  properties:
+    data: { type: array, items: { $ref: '#/StockTransfer' } }
+    meta: { $ref: '#/PaginationMeta' }
+
+CategoryEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/Category' }
+
+AttributeEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/Attribute' }
+
+StockPositionPage:
+  type: object
+  required: [data, meta]
+  properties:
+    data: { type: array, items: { $ref: '#/StockPosition' } }
+    meta: { $ref: '#/PaginationMeta' }
+
+StockLotPage:
+  type: object
+  required: [data, meta]
+  properties:
+    data: { type: array, items: { $ref: '#/StockLot' } }
+    meta: { $ref: '#/RedactedMeta' }
+
+StockMovementPage:
+  type: object
+  required: [data, meta]
+  properties:
+    data: { type: array, items: { $ref: '#/StockMovement' } }
+    meta: { $ref: '#/RedactedMeta' }
+
+BarcodeLookup:
+  type: object
+  required: [data]
+  properties:
+    data:
+      type: object
+      required: [variant, unit, product]
+      properties:
+        variant: { $ref: '#/ProductVariant' }
+        unit: { $ref: '#/VariantUnit' }
+        product:
+          type: object
+          required: [id, reference, name, status]
+          properties:
+            id: { $ref: '#/Ulid' }
+            reference: { type: string }
+            name: { type: string }
+            status: { type: string }
+
+StockValuation:
+  type: object
+  required: [data]
+  properties:
+    data:
+      type: object
+      required: [currency, total, warehouses, provisional_lots]
+      properties:
+        currency: { $ref: '#/CurrencyCode' }
+        total: { $ref: '#/Money' }
+        warehouses:
+          type: array
+          items:
+            type: object
+            required: [warehouse_id, value]
+            properties:
+              warehouse_id: { $ref: '#/Ulid' }
+              value: { $ref: '#/Money' }
+        provisional_lots: { type: integer, description: 'Lots encore au coût provisoire (D-012)' }
+
+
+# --------------------------------------------------------------------------- Lot 3 : achats, arrivages, coûts
+Rate:
+  type: string
+  description: Taux de change exact (jusqu'à 10 décimales), en chaîne.
+  pattern: '^\d+(\.\d{1,10})?$'
+
+Volume:
+  type: string
+  description: Volume en m³ (6 décimales).
+  pattern: '^\d+(\.\d{1,6})?$'
+
+PartyRef:
+  type: object
+  required: [id, code, name]
+  properties:
+    id: { $ref: '#/Ulid' }
+    code: { type: string }
+    name: { type: string }
+    supplier_type: { type: string }
+    currency: { $ref: '#/CurrencyCode' }
+
+UnitRef:
+  type: object
+  required: [id, variant_id, code, label, factor]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    variant_id: { $ref: '#/Ulid' }
+    code: { type: string }
+    label: { type: string }
+    factor: { type: integer, minimum: 1 }
+
+Supplier:
+  type: object
+  required: [id, code, name, supplier_type, country_code, currency, phone, email, address, contact_name, notes, status, has_history, created_at]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    code: { type: string }
+    name: { type: string }
+    supplier_type: { type: string, enum: [goods, forwarder, carrier, customs, other] }
+    country_code: { type: [string, 'null'] }
+    currency: { $ref: '#/CurrencyCode' }
+    phone: { type: [string, 'null'] }
+    email: { type: [string, 'null'] }
+    address: { type: [string, 'null'] }
+    contact_name: { type: [string, 'null'] }
+    notes: { type: [string, 'null'] }
+    status: { type: string, enum: [active, inactive] }
+    has_history: { type: boolean }
+    created_at: { $ref: '#/DateTime' }
+
+PurchaseOrderLine:
+  type: object
+  required: [id, position, variant, unit, unit_factor, qty_units, qty_base, unit_price, line_total, qty_received]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    position: { type: integer }
+    variant:
+      oneOf: [{ $ref: '#/VariantRef' }, { type: 'null' }]
+    unit:
+      oneOf: [{ $ref: '#/UnitRef' }, { type: 'null' }]
+    unit_factor: { type: integer }
+    qty_units: { type: integer }
+    qty_base: { type: integer }
+    unit_price: { $ref: '#/Decimal' }
+    line_total: { $ref: '#/Decimal' }
+    qty_received: { type: integer }
+
+PurchaseOrder:
+  type: object
+  required: [id, number, supplier, supplier_reference, order_date, currency, estimated_rate, status, total_amount, notes, confirmed_at, closed_at, version, created_at]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    number: { type: string, examples: [BC-2026-0001] }
+    supplier:
+      oneOf: [{ $ref: '#/PartyRef' }, { type: 'null' }]
+    supplier_reference: { type: [string, 'null'] }
+    order_date: { type: string, format: date }
+    currency: { $ref: '#/CurrencyCode' }
+    estimated_rate: { type: [string, 'null'] }
+    status: { type: string, enum: [draft, confirmed, partially_received, received, closed, cancelled] }
+    total_amount: { $ref: '#/Decimal' }
+    notes: { type: [string, 'null'] }
+    confirmed_at: { type: [string, 'null'], format: date-time }
+    closed_at: { type: [string, 'null'], format: date-time }
+    version: { type: integer }
+    created_at: { $ref: '#/DateTime' }
+    lines: { type: array, items: { $ref: '#/PurchaseOrderLine' } }
+
+SupplierBill:
+  type: object
+  required: [id, number, supplier, supplier_invoice_ref, description, source_type, source_id, compensates_bill_id, currency, amount, amount_paid, balance, bill_date, due_date, status, created_at]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    number: { type: string, examples: [ENG-2026-0001] }
+    supplier:
+      oneOf: [{ $ref: '#/PartyRef' }, { type: 'null' }]
+    supplier_invoice_ref: { type: [string, 'null'] }
+    description: { type: [string, 'null'] }
+    source_type: { type: string, enum: [purchase_order, shipment_cost, manual, supplier_credit] }
+    source_id: { type: [string, 'null'] }
+    compensates_bill_id: { type: [string, 'null'] }
+    currency: { $ref: '#/CurrencyCode' }
+    amount: { $ref: '#/Decimal' }
+    amount_paid: { $ref: '#/Decimal' }
+    balance: { $ref: '#/Decimal' }
+    bill_date: { type: string, format: date }
+    due_date: { type: [string, 'null'], format: date }
+    status: { type: string, enum: [open, partially_paid, paid, cancelled] }
+    created_at: { $ref: '#/DateTime' }
+
+SupplierStatement:
+  type: object
+  required: [supplier, balances, bills]
+  additionalProperties: false
+  properties:
+    supplier: { $ref: '#/Supplier' }
+    balances:
+      type: array
+      description: Dette par devise = Σ engagements − Σ règlements (PUR-002)
+      items:
+        type: object
+        required: [currency, committed, paid, balance]
+        additionalProperties: false
+        properties:
+          currency: { $ref: '#/CurrencyCode' }
+          committed: { $ref: '#/Decimal' }
+          paid: { $ref: '#/Decimal' }
+          balance: { $ref: '#/Decimal' }
+    bills: { type: array, items: { $ref: '#/SupplierBill' } }
+
+Container:
+  type: object
+  required: [id, container_number, container_type, seal_number]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    container_number: { type: string }
+    container_type: { type: [string, 'null'] }
+    seal_number: { type: [string, 'null'] }
+
+ShipmentLine:
+  type: object
+  required: [id, position, container_id, purchase_order_line_id, supplier, variant, destination_warehouse_id, cartons, pieces_per_carton, qty_expected, qty_received, qty_remaining, is_closed, cbm_total, purchase_currency, packing_list_line_id]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    position: { type: integer }
+    container_id: { type: [string, 'null'] }
+    purchase_order_line_id: { type: [string, 'null'] }
+    supplier:
+      oneOf: [{ $ref: '#/PartyRef' }, { type: 'null' }]
+    variant:
+      oneOf: [{ $ref: '#/VariantRef' }, { type: 'null' }]
+    destination_warehouse_id: { $ref: '#/Ulid' }
+    cartons: { type: [integer, 'null'] }
+    pieces_per_carton: { type: [integer, 'null'] }
+    qty_expected: { type: integer }
+    qty_received: { type: integer }
+    qty_remaining: { type: integer }
+    is_closed: { type: boolean }
+    cbm_total:
+      oneOf: [{ $ref: '#/Volume' }, { type: 'null' }]
+    purchase_currency: { $ref: '#/CurrencyCode' }
+    purchase_unit_price: { $ref: '#/Decimal', description: 'Absent sans purchase_orders.view (GEN-005)' }
+    purchase_amount: { $ref: '#/Decimal', description: 'Absent sans purchase_orders.view (GEN-005)' }
+    packing_list_line_id: { type: [string, 'null'] }
+
+Shipment:
+  type: object
+  required: [id, number, reference, carrier, origin_country, shipped_at, eta, arrived_at, status, default_warehouse_id, notes, closed_at, version, created_at]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    number: { type: string, examples: [ARR-2026-0001] }
+    reference: { type: [string, 'null'] }
+    carrier: { type: [string, 'null'] }
+    origin_country: { type: [string, 'null'] }
+    shipped_at: { type: [string, 'null'], format: date }
+    eta: { type: [string, 'null'], format: date }
+    arrived_at: { type: [string, 'null'], format: date }
+    status: { type: string, enum: [preparing, shipped, in_transit, arrived, unloading, partially_received, received, closed, cancelled] }
+    default_warehouse_id: { type: [string, 'null'] }
+    notes: { type: [string, 'null'] }
+    closed_at: { type: [string, 'null'], format: date-time }
+    version: { type: integer }
+    created_at: { $ref: '#/DateTime' }
+    containers: { type: array, items: { $ref: '#/Container' } }
+    purchase_orders:
+      type: array
+      items:
+        type: object
+        required: [id, number, status]
+        properties:
+          id: { $ref: '#/Ulid' }
+          number: { type: string }
+          status: { type: string }
+    lines: { type: array, items: { $ref: '#/ShipmentLine' } }
+
+GoodsReceiptLine:
+  type: object
+  required: [id, shipment_line_id, purchase_order_line_id, variant, qty_expected, qty_counted, qty_accepted, qty_damaged, qty_missing, qty_surplus, damaged_disposition, is_counted, lot_id, lot_number, note]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    shipment_line_id: { type: [string, 'null'] }
+    purchase_order_line_id: { type: [string, 'null'] }
+    variant:
+      oneOf: [{ $ref: '#/VariantRef' }, { type: 'null' }]
+    qty_expected: { type: integer }
+    qty_counted: { type: integer }
+    qty_accepted: { type: integer }
+    qty_damaged: { type: integer }
+    qty_missing: { type: integer }
+    qty_surplus: { type: integer }
+    damaged_disposition: { type: string, enum: [hold, reject] }
+    is_counted: { type: boolean }
+    lot_id: { type: [string, 'null'] }
+    lot_number: { type: [string, 'null'] }
+    note: { type: [string, 'null'] }
+
+GoodsReceipt:
+  type: object
+  required: [id, number, shipment_id, purchase_order_id, warehouse_id, status, counting_mode, note, validated_at, version, created_at]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    number: { type: string, examples: [BR-2026-0001] }
+    shipment_id: { type: [string, 'null'] }
+    purchase_order_id: { type: [string, 'null'] }
+    warehouse_id: { $ref: '#/Ulid' }
+    status: { type: string, enum: [draft, counting, validated, cancelled] }
+    counting_mode: { type: string, enum: [manual, scan] }
+    note: { type: [string, 'null'] }
+    validated_at: { type: [string, 'null'], format: date-time }
+    version: { type: integer }
+    created_at: { $ref: '#/DateTime' }
+    lines: { type: array, items: { $ref: '#/GoodsReceiptLine' } }
+
+ScanEvent:
+  type: object
+  required: [id, client_event_id, scanned_code, goods_receipt_line_id, qty_base, damaged, outcome, scanned_at]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    client_event_id: { type: string }
+    scanned_code: { type: string }
+    goods_receipt_line_id: { type: [string, 'null'] }
+    qty_base: { type: integer }
+    damaged: { type: boolean }
+    outcome: { type: string, enum: [counted, unknown, not_expected] }
+    scanned_at: { $ref: '#/DateTime' }
+
+PackingListLine:
+  type: object
+  required: [id, row_number, raw, supplier_reference, description, cartons, pieces_per_carton, total_qty, cbm, match_status, matched_variant, errors]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    row_number: { type: integer }
+    raw: { type: object, additionalProperties: { type: [string, 'null'] } }
+    supplier_reference: { type: [string, 'null'] }
+    description: { type: [string, 'null'] }
+    cartons: { type: [integer, 'null'] }
+    pieces_per_carton: { type: [integer, 'null'] }
+    total_qty: { type: [integer, 'null'] }
+    cbm:
+      oneOf: [{ $ref: '#/Volume' }, { type: 'null' }]
+    unit_price: { type: [string, 'null'] }
+    amount: { type: [string, 'null'] }
+    match_status: { type: string, enum: [unmatched, suggested, confirmed, new_product, ignored] }
+    matched_variant:
+      oneOf: [{ $ref: '#/VariantRef' }, { type: 'null' }]
+    errors:
+      type: array
+      items:
+        type: object
+        required: [field, message]
+        properties:
+          field: { type: string }
+          message: { type: string }
+
+PackingList:
+  type: object
+  required: [id, shipment_id, supplier_id, file_id, file_format, currency, status, parse_report, validated_at, created_at]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    shipment_id: { $ref: '#/Ulid' }
+    supplier_id: { type: [string, 'null'] }
+    file_id: { $ref: '#/Ulid' }
+    file_format: { type: string, enum: [xlsx, csv, pdf] }
+    currency: { $ref: '#/CurrencyCode' }
+    status: { type: string, enum: [uploaded, in_review, validated, rejected] }
+    parse_report: { type: [object, 'null'] }
+    validated_at: { type: [string, 'null'], format: date-time }
+    created_at: { $ref: '#/DateTime' }
+    lines: { type: array, items: { $ref: '#/PackingListLine' } }
+
+MappingTemplate:
+  type: object
+  required: [id, import_type, supplier_id, name, file_format, mapping]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    import_type: { type: string, enum: [packing_list, products, opening_stock, customers, suppliers] }
+    supplier_id: { type: [string, 'null'] }
+    name: { type: string }
+    file_format: { type: string, enum: [xlsx, csv, pdf] }
+    mapping: { type: object }
+
+LandedCostCategory:
+  type: object
+  required: [id, code, label, is_system, default_allocation, is_active]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    code: { type: string }
+    label: { type: string }
+    is_system: { type: boolean }
+    default_allocation: { type: string, enum: [cbm, direct] }
+    is_active: { type: boolean }
+
+ShipmentCost:
+  type: object
+  required: [id, shipment_id, category_id, supplier, description, currency, amount, exchange_rate, amount_reference, allocation_method, target_shipment_line_id, is_estimate, supplier_bill_id, status, version, created_at]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    shipment_id: { $ref: '#/Ulid' }
+    category_id: { $ref: '#/Ulid' }
+    supplier:
+      oneOf: [{ $ref: '#/PartyRef' }, { type: 'null' }]
+    description: { type: [string, 'null'] }
+    currency: { $ref: '#/CurrencyCode' }
+    amount: { $ref: '#/Decimal' }
+    exchange_rate: { $ref: '#/Rate' }
+    amount_reference: { $ref: '#/Decimal' }
+    allocation_method: { type: string, enum: [cbm, direct] }
+    target_shipment_line_id: { type: [string, 'null'] }
+    is_estimate: { type: boolean }
+    supplier_bill_id: { type: [string, 'null'] }
+    status: { type: string, enum: [draft, confirmed, cancelled] }
+    version: { type: integer }
+    created_at: { $ref: '#/DateTime' }
+
+CostModel:
+  type: object
+  required: [id, code, name, version, is_standard, variables, expression, active_from, status, tested_at, created_at]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    code: { type: string }
+    name: { type: string }
+    version: { type: integer }
+    is_standard: { type: boolean }
+    variables: { type: array, items: { type: string } }
+    expression: { type: string }
+    active_from: { type: [string, 'null'], format: date }
+    status: { type: string, enum: [draft, active, retired] }
+    tested_at: { type: [string, 'null'], format: date-time }
+    created_at: { $ref: '#/DateTime' }
+
+LandedCostLine:
+  type: object
+  required: [id, shipment_line_id, variant, qty_accepted, pieces_per_carton, line_cbm, purchase_currency, purchase_amount_foreign, exchange_rate, purchase_amount_converted, allocated_common_fees, direct_fees, rounding_adjustment, total_cost, unit_cost_piece, unit_cost_carton, allocations]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    shipment_line_id: { $ref: '#/Ulid' }
+    variant:
+      oneOf: [{ $ref: '#/VariantRef' }, { type: 'null' }]
+    qty_accepted: { type: integer }
+    pieces_per_carton: { type: [integer, 'null'] }
+    line_cbm: { $ref: '#/Volume' }
+    purchase_currency: { $ref: '#/CurrencyCode' }
+    purchase_amount_foreign: { $ref: '#/Decimal' }
+    exchange_rate: { $ref: '#/Rate' }
+    purchase_amount_converted: { $ref: '#/Decimal' }
+    allocated_common_fees: { $ref: '#/Decimal' }
+    direct_fees: { $ref: '#/Decimal' }
+    rounding_adjustment: { $ref: '#/Decimal' }
+    total_cost: { $ref: '#/Decimal' }
+    unit_cost_piece: { $ref: '#/Decimal' }
+    unit_cost_carton:
+      oneOf: [{ $ref: '#/Decimal' }, { type: 'null' }]
+    allocations:
+      type: array
+      items:
+        type: object
+        required: [shipment_cost_id, amount]
+        properties:
+          shipment_cost_id: { $ref: '#/Ulid' }
+          amount: { $ref: '#/Decimal' }
+
+LandedCost:
+  type: object
+  required: [id, shipment_id, model_id, revision, status, reference_currency, rates_snapshot, inputs_hash, total_cbm, total_common_fees, total_direct_fees, total_purchase, total_cost, blocking_issues, discrepancies, computed_at, finalized_at, created_at]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    shipment_id: { $ref: '#/Ulid' }
+    model_id: { $ref: '#/Ulid' }
+    revision: { type: integer }
+    status: { type: string, enum: [computed, final, superseded] }
+    reference_currency: { $ref: '#/CurrencyCode' }
+    rates_snapshot: { type: object, description: 'Taux utilisés (CR-003)' }
+    inputs_hash: { type: string, pattern: '^[0-9a-f]{64}$' }
+    total_cbm: { $ref: '#/Volume' }
+    total_common_fees: { $ref: '#/Decimal' }
+    total_direct_fees: { $ref: '#/Decimal' }
+    total_purchase: { $ref: '#/Decimal' }
+    total_cost: { $ref: '#/Decimal' }
+    blocking_issues:
+      type: array
+      description: Anomalies bloquant la finalisation (CR-006)
+      items:
+        type: object
+        required: [code, message]
+        properties:
+          code: { type: string }
+          message: { type: string }
+    discrepancies: { type: array, items: { type: object }, description: 'Écarts (manquants valorisés, surplus) — CR-010' }
+    computed_at: { type: [string, 'null'], format: date-time }
+    finalized_at: { type: [string, 'null'], format: date-time }
+    created_at: { $ref: '#/DateTime' }
+    lines: { type: array, items: { $ref: '#/LandedCostLine' } }
+    valuation_adjustments:
+      type: array
+      items:
+        type: object
+        required: [id, lot_id, stock_movement_id, movement_type, quantity, old_unit_cost, new_unit_cost, delta_amount]
+        properties:
+          id: { $ref: '#/Ulid' }
+          lot_id: { $ref: '#/Ulid' }
+          stock_movement_id: { $ref: '#/Ulid' }
+          movement_type: { type: string }
+          quantity: { type: integer }
+          old_unit_cost: { $ref: '#/Decimal' }
+          new_unit_cost: { $ref: '#/Decimal' }
+          delta_amount: { $ref: '#/Decimal' }
+
+SupplierPage:
+  type: object
+  required: [data, meta]
+  properties:
+    data: { type: array, items: { $ref: '#/Supplier' } }
+    meta: { $ref: '#/PaginationMeta' }
+
+SupplierEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/Supplier' }
+    meta:
+      type: object
+      properties:
+        redacted: { type: array, items: { type: string } }
+        duplicate: { type: boolean }
+
+PurchaseOrderPage:
+  type: object
+  required: [data, meta]
+  properties:
+    data: { type: array, items: { $ref: '#/PurchaseOrder' } }
+    meta: { $ref: '#/PaginationMeta' }
+
+PurchaseOrderEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/PurchaseOrder' }
+    meta:
+      type: object
+      properties:
+        redacted: { type: array, items: { type: string } }
+        duplicate: { type: boolean }
+
+SupplierBillPage:
+  type: object
+  required: [data, meta]
+  properties:
+    data: { type: array, items: { $ref: '#/SupplierBill' } }
+    meta: { $ref: '#/PaginationMeta' }
+
+SupplierBillEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/SupplierBill' }
+    meta:
+      type: object
+      properties:
+        redacted: { type: array, items: { type: string } }
+        duplicate: { type: boolean }
+
+SupplierStatementEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/SupplierStatement' }
+    meta:
+      type: object
+      properties:
+        redacted: { type: array, items: { type: string } }
+        duplicate: { type: boolean }
+
+ShipmentPage:
+  type: object
+  required: [data, meta]
+  properties:
+    data: { type: array, items: { $ref: '#/Shipment' } }
+    meta: { $ref: '#/PaginationMeta' }
+
+ShipmentEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/Shipment' }
+    meta:
+      type: object
+      properties:
+        redacted: { type: array, items: { type: string } }
+        duplicate: { type: boolean }
+
+ShipmentLineList:
+  type: object
+  required: [data]
+  properties:
+    data: { type: array, items: { $ref: '#/ShipmentLine' } }
+    meta:
+      type: object
+      properties:
+        redacted: { type: array, items: { type: string } }
+
+ShipmentLineEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/ShipmentLine' }
+    meta:
+      type: object
+      properties:
+        redacted: { type: array, items: { type: string } }
+        duplicate: { type: boolean }
+
+ContainerList:
+  type: object
+  required: [data]
+  properties:
+    data: { type: array, items: { $ref: '#/Container' } }
+    meta:
+      type: object
+      properties:
+        redacted: { type: array, items: { type: string } }
+
+ContainerEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/Container' }
+    meta:
+      type: object
+      properties:
+        redacted: { type: array, items: { type: string } }
+        duplicate: { type: boolean }
+
+GoodsReceiptPage:
+  type: object
+  required: [data, meta]
+  properties:
+    data: { type: array, items: { $ref: '#/GoodsReceipt' } }
+    meta: { $ref: '#/PaginationMeta' }
+
+GoodsReceiptEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/GoodsReceipt' }
+    meta:
+      type: object
+      properties:
+        redacted: { type: array, items: { type: string } }
+        duplicate: { type: boolean }
+
+ScanEventEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/ScanEvent' }
+    meta:
+      type: object
+      properties:
+        redacted: { type: array, items: { type: string } }
+        duplicate: { type: boolean }
+
+PackingListList:
+  type: object
+  required: [data]
+  properties:
+    data: { type: array, items: { $ref: '#/PackingList' } }
+    meta:
+      type: object
+      properties:
+        redacted: { type: array, items: { type: string } }
+
+PackingListEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/PackingList' }
+    meta:
+      type: object
+      properties:
+        redacted: { type: array, items: { type: string } }
+        duplicate: { type: boolean }
+
+PackingListLineList:
+  type: object
+  required: [data]
+  properties:
+    data: { type: array, items: { $ref: '#/PackingListLine' } }
+    meta:
+      type: object
+      properties:
+        redacted: { type: array, items: { type: string } }
+
+PackingListLineEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/PackingListLine' }
+    meta:
+      type: object
+      properties:
+        redacted: { type: array, items: { type: string } }
+        duplicate: { type: boolean }
+
+MappingTemplateList:
+  type: object
+  required: [data]
+  properties:
+    data: { type: array, items: { $ref: '#/MappingTemplate' } }
+    meta:
+      type: object
+      properties:
+        redacted: { type: array, items: { type: string } }
+
+MappingTemplateEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/MappingTemplate' }
+    meta:
+      type: object
+      properties:
+        redacted: { type: array, items: { type: string } }
+        duplicate: { type: boolean }
+
+LandedCostCategoryList:
+  type: object
+  required: [data]
+  properties:
+    data: { type: array, items: { $ref: '#/LandedCostCategory' } }
+    meta:
+      type: object
+      properties:
+        redacted: { type: array, items: { type: string } }
+
+LandedCostCategoryEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/LandedCostCategory' }
+    meta:
+      type: object
+      properties:
+        redacted: { type: array, items: { type: string } }
+        duplicate: { type: boolean }
+
+ShipmentCostList:
+  type: object
+  required: [data]
+  properties:
+    data: { type: array, items: { $ref: '#/ShipmentCost' } }
+    meta:
+      type: object
+      properties:
+        redacted: { type: array, items: { type: string } }
+
+ShipmentCostEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/ShipmentCost' }
+    meta:
+      type: object
+      properties:
+        redacted: { type: array, items: { type: string } }
+        duplicate: { type: boolean }
+
+CostModelList:
+  type: object
+  required: [data]
+  properties:
+    data: { type: array, items: { $ref: '#/CostModel' } }
+    meta:
+      type: object
+      properties:
+        redacted: { type: array, items: { type: string } }
+
+CostModelEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/CostModel' }
+    meta:
+      type: object
+      properties:
+        redacted: { type: array, items: { type: string } }
+        duplicate: { type: boolean }
+
+LandedCostList:
+  type: object
+  required: [data]
+  properties:
+    data: { type: array, items: { $ref: '#/LandedCost' } }
+    meta:
+      type: object
+      properties:
+        redacted: { type: array, items: { type: string } }
+
+LandedCostEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/LandedCost' }
+    meta:
+      type: object
+      properties:
+        redacted: { type: array, items: { type: string } }
+        duplicate: { type: boolean }
+
+CostModelTestEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data:
+      type: object
+      required: [result, variables]
+      properties:
+        result: { $ref: '#/Decimal' }
+        variables: { type: object, additionalProperties: { type: string } }
+
+# --------------------------------------------------------------------------- Lot 4 : ventes, facturation, trésorerie
+CustomerRef:
+  type: object
+  required: [id, code, name, phone]
+  properties:
+    id: { $ref: '#/Ulid' }
+    code: { type: string }
+    name: { type: string }
+    phone: { type: [string, 'null'] }
+
+Customer:
+  type: object
+  required: [id, code, name, customer_type, phone, email, address, default_price_list_id, payment_terms_days, is_walk_in, status, has_history, created_at]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    code: { type: string }
+    name: { type: string }
+    customer_type: { type: string, enum: [individual, business] }
+    phone: { type: [string, 'null'], description: 'Format E.164 (+221…)' }
+    email: { type: [string, 'null'] }
+    address: { type: [string, 'null'] }
+    default_price_list_id: { type: [string, 'null'] }
+    payment_terms_days: { type: [integer, 'null'] }
+    is_walk_in: { type: boolean }
+    status: { type: string, enum: [active, inactive] }
+    has_history: { type: boolean }
+    created_at: { $ref: '#/DateTime' }
+
+SalesLine:
+  type: object
+  required: [id, position, variant, product_type, unit_id, unit_label, unit_factor, description, qty_units, qty_base, list_unit_price, unit_price, price_overridden, discount_type, discount_value, discount_amount, tax_rate_id, tax_rate, tax_amount, line_total]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    position: { type: integer }
+    variant:
+      oneOf: [{ $ref: '#/VariantRef' }, { type: 'null' }]
+    product_type: { type: string, enum: [stock, service] }
+    unit_id: { $ref: '#/Ulid' }
+    unit_label: { type: string }
+    unit_factor: { type: integer }
+    description: { type: string }
+    qty_units: { type: integer }
+    qty_base: { type: integer }
+    list_unit_price: { $ref: '#/Decimal' }
+    unit_price: { $ref: '#/Decimal' }
+    price_overridden: { type: boolean }
+    discount_type: { type: [string, 'null'] }
+    discount_value: { type: [string, 'null'] }
+    discount_amount: { $ref: '#/Decimal' }
+    tax_rate_id: { type: [string, 'null'] }
+    tax_rate: { type: string }
+    tax_amount: { $ref: '#/Decimal' }
+    line_total: { $ref: '#/Decimal' }
+    qty_delivered: { type: integer }
+    qty_returned: { type: integer }
+    qty_cancelled: { type: integer }
+    estimated_unit_cost: { type: [string, 'null'], description: 'Visible avec products.view_sensitive' }
+
+SalesHeader:
+  type: object
+  required: [id, number, customer, price_list_id, warehouse_id, currency, global_discount, subtotal, discount_total, tax_total, total, status, notes, version, created_at]
+  properties:
+    id: { $ref: '#/Ulid' }
+    number: { type: string }
+    customer:
+      oneOf: [{ $ref: '#/CustomerRef' }, { type: 'null' }]
+    price_list_id: { $ref: '#/Ulid' }
+    warehouse_id: { type: [string, 'null'] }
+    currency: { $ref: '#/CurrencyCode' }
+    global_discount:
+      type: [object, 'null']
+      properties:
+        type: { type: string }
+        value: { type: string }
+    subtotal: { $ref: '#/Decimal' }
+    discount_total: { $ref: '#/Decimal' }
+    tax_total: { $ref: '#/Decimal' }
+    total: { $ref: '#/Decimal' }
+    status: { type: string }
+    notes: { type: [string, 'null'] }
+    version: { type: integer }
+    created_at: { $ref: '#/DateTime' }
+    lines: { type: array, items: { $ref: '#/SalesLine' } }
+
+Quotation:
+  allOf:
+    - $ref: '#/SalesHeader'
+    - type: object
+      required: [issue_date, valid_until, converted_order_id]
+      properties:
+        status: { type: string, enum: [draft, sent, accepted, converted, expired, cancelled] }
+        issue_date: { type: string, format: date }
+        valid_until: { type: [string, 'null'], format: date }
+        converted_order_id: { type: [string, 'null'] }
+
+Dispute:
+  type: object
+  required: [id, sales_order_id, status, reason, resolution, opened_at, resolved_at]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    sales_order_id: { $ref: '#/Ulid' }
+    status: { type: string, enum: [open, resolved] }
+    reason: { type: string }
+    resolution: { type: [string, 'null'] }
+    opened_at: { $ref: '#/DateTime' }
+    resolved_at: { type: [string, 'null'], format: date-time }
+
+SalesOrder:
+  allOf:
+    - $ref: '#/SalesHeader'
+    - type: object
+      required: [quotation_id, channel, fulfilment_mode, recipient_name, recipient_phone, delivery_address, has_dispute, invoice_id, confirmed_at, cancelled_at, cancellation_reason, parent_order_id]
+      properties:
+        status: { type: string, enum: [draft, pending_approval, confirmed, preparing, ready, in_delivery, partially_delivered, delivered, cancelled] }
+        quotation_id: { type: [string, 'null'] }
+        channel: { type: string, enum: [standard, counter] }
+        fulfilment_mode: { type: string, enum: [pickup, delivery] }
+        recipient_name: { type: [string, 'null'] }
+        recipient_phone: { type: [string, 'null'] }
+        delivery_address: { type: [string, 'null'] }
+        has_dispute: { type: boolean }
+        invoice_id: { type: [string, 'null'] }
+        confirmed_at: { type: [string, 'null'], format: date-time }
+        cancelled_at: { type: [string, 'null'], format: date-time }
+        cancellation_reason: { type: [string, 'null'] }
+        parent_order_id: { type: [string, 'null'] }
+        invoice:
+          type: [object, 'null']
+          properties:
+            id: { $ref: '#/Ulid' }
+            number: { type: string }
+            total: { $ref: '#/Decimal' }
+            balance_due: { $ref: '#/Decimal' }
+            payment_status: { type: string }
+            payment_method: { type: [string, 'null'] }
+            status: { type: string }
+        deliveries: { type: array, items: { $ref: '#/Delivery' } }
+        disputes: { type: array, items: { $ref: '#/Dispute' } }
+
+Delivery:
+  type: object
+  required: [id, number, sales_order_id, warehouse_id, mode, status, recipient_name, recipient_phone, address, courier, prepared_at, shipped_at, delivered_at, failed_at, failure_reason, attempt, version, created_at]
+  properties:
+    id: { $ref: '#/Ulid' }
+    number: { type: string, examples: [BL-2026-0001] }
+    sales_order_id: { $ref: '#/Ulid' }
+    warehouse_id: { $ref: '#/Ulid' }
+    mode: { type: string, enum: [pickup, delivery] }
+    status: { type: string, enum: [preparing, ready, in_delivery, delivered, failed, cancelled] }
+    recipient_name: { type: [string, 'null'] }
+    recipient_phone: { type: [string, 'null'] }
+    address: { type: [string, 'null'] }
+    courier: { type: [string, 'null'] }
+    prepared_at: { type: [string, 'null'], format: date-time }
+    shipped_at: { type: [string, 'null'], format: date-time }
+    delivered_at: { type: [string, 'null'], format: date-time }
+    failed_at: { type: [string, 'null'], format: date-time }
+    failure_reason: { type: [string, 'null'] }
+    attempt: { type: integer }
+    version: { type: integer }
+    created_at: { $ref: '#/DateTime' }
+    lines:
+      type: array
+      items:
+        type: object
+        required: [id, sales_order_line_id, variant, quantity, qty_delivered, lots]
+        properties:
+          id: { $ref: '#/Ulid' }
+          sales_order_line_id: { $ref: '#/Ulid' }
+          variant:
+            oneOf: [{ $ref: '#/VariantRef' }, { type: 'null' }]
+          quantity: { type: integer }
+          qty_delivered: { type: integer }
+          lots:
+            type: array
+            items:
+              type: object
+              required: [lot_id, lot_number, quantity, allocation_method, attempt, status]
+              properties:
+                lot_id: { $ref: '#/Ulid' }
+                lot_number: { type: [string, 'null'] }
+                quantity: { type: integer }
+                allocation_method: { type: string, enum: [fifo, manual] }
+                attempt: { type: integer }
+                status: { type: string, enum: [allocated, delivered, returned] }
+                unit_cost: { $ref: '#/Decimal' }
+
+SalesReturn:
+  type: object
+  required: [id, number, sales_order_id, customer_id, warehouse_id, return_type, status, credit_note_id, exchange_order_id, reason, received_at, closed_at, created_at]
+  properties:
+    id: { $ref: '#/Ulid' }
+    number: { type: string, examples: [RET-2026-0001] }
+    sales_order_id: { $ref: '#/Ulid' }
+    customer_id: { $ref: '#/Ulid' }
+    warehouse_id: { $ref: '#/Ulid' }
+    return_type: { type: string, enum: [refused, defective, exchange, other] }
+    status: { type: string, enum: [draft, received, inspected, closed, cancelled] }
+    credit_note_id: { type: [string, 'null'] }
+    exchange_order_id: { type: [string, 'null'] }
+    reason: { type: [string, 'null'] }
+    received_at: { type: [string, 'null'], format: date-time }
+    closed_at: { type: [string, 'null'], format: date-time }
+    created_at: { $ref: '#/DateTime' }
+    lines:
+      type: array
+      items:
+        type: object
+        required: [id, sales_order_line_id, variant, lot_id, lot_number, quantity, disposition, credit_amount]
+        properties:
+          id: { $ref: '#/Ulid' }
+          sales_order_line_id: { $ref: '#/Ulid' }
+          variant:
+            oneOf: [{ $ref: '#/VariantRef' }, { type: 'null' }]
+          lot_id: { $ref: '#/Ulid' }
+          lot_number: { type: [string, 'null'] }
+          quantity: { type: integer }
+          disposition: { type: [string, 'null'], enum: [restock, damaged, null] }
+          credit_amount: { $ref: '#/Decimal' }
+
+Invoice:
+  type: object
+  required: [id, number, sales_order_id, customer_id, customer, issue_date, due_date, currency, subtotal, discount_total, tax_total, total, amount_paid, amount_credited, balance_due, payment_method, payment_status, status, is_overdue, created_at]
+  properties:
+    id: { $ref: '#/Ulid' }
+    number: { type: string, examples: [FAC-2026-0001] }
+    sales_order_id: { $ref: '#/Ulid' }
+    customer_id: { $ref: '#/Ulid' }
+    customer:
+      type: object
+      properties:
+        code: { type: [string, 'null'] }
+        name: { type: [string, 'null'] }
+        phone: { type: [string, 'null'] }
+    issue_date: { type: string, format: date }
+    due_date: { type: string, format: date }
+    currency: { $ref: '#/CurrencyCode' }
+    subtotal: { $ref: '#/Decimal' }
+    discount_total: { $ref: '#/Decimal' }
+    tax_total: { $ref: '#/Decimal' }
+    total: { $ref: '#/Decimal' }
+    amount_paid: { $ref: '#/Decimal' }
+    amount_credited: { $ref: '#/Decimal' }
+    balance_due: { $ref: '#/Decimal' }
+    payment_method: { type: [string, 'null'], enum: [cash, wave, orange_money, bank_transfer, null] }
+    payment_status: { type: string, enum: [unpaid, partially_paid, paid] }
+    status: { type: string, enum: [issued, cancelled] }
+    is_overdue: { type: boolean }
+    created_at: { $ref: '#/DateTime' }
+    customer_snapshot: { type: object }
+    company_snapshot: { type: object }
+    lines: { type: array, items: { type: object } }
+    payments: { type: array, items: { type: object } }
+    credit_applications: { type: array, items: { type: object } }
+
+CreditNote:
+  type: object
+  required: [id, number, customer_id, origin_invoice_id, return_id, kind, reason, currency, total, amount_applied, amount_available, status, issued_at, version, created_at]
+  properties:
+    id: { $ref: '#/Ulid' }
+    number: { type: [string, 'null'], description: 'AV-AAAA-NNNN, attribué à l’émission' }
+    customer_id: { $ref: '#/Ulid' }
+    origin_invoice_id: { type: [string, 'null'] }
+    return_id: { type: [string, 'null'] }
+    kind: { type: string, enum: [cancellation, return, commercial, price_correction] }
+    reason: { type: string }
+    currency: { $ref: '#/CurrencyCode' }
+    total: { $ref: '#/Decimal' }
+    amount_applied: { $ref: '#/Decimal' }
+    amount_available: { $ref: '#/Decimal' }
+    status: { type: string, enum: [draft, pending_approval, issued, rejected] }
+    issued_at: { type: [string, 'null'], format: date-time }
+    version: { type: integer }
+    created_at: { $ref: '#/DateTime' }
+    lines: { type: array, items: { type: object } }
+    applications: { type: array, items: { type: object } }
+
+Payment:
+  type: object
+  required: [id, number, invoice_id, invoice_number, customer_id, financial_account_id, method, amount, currency, paid_at, external_reference, status, reverses_payment_id, reversal_reason, invoice_balance_due, invoice_payment_status]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    number: { type: string, examples: [REC-2026-0001] }
+    invoice_id: { $ref: '#/Ulid' }
+    invoice_number: { type: [string, 'null'] }
+    customer_id: { $ref: '#/Ulid' }
+    financial_account_id: { $ref: '#/Ulid' }
+    method: { type: string, enum: [cash, wave, orange_money, bank_transfer] }
+    amount: { $ref: '#/Decimal', description: 'Négatif pour une contre-passation' }
+    currency: { type: [string, 'null'] }
+    paid_at: { $ref: '#/DateTime' }
+    external_reference: { type: [string, 'null'] }
+    status: { type: string, enum: [posted, reversed] }
+    reverses_payment_id: { type: [string, 'null'] }
+    reversal_reason: { type: [string, 'null'] }
+    invoice_balance_due: { type: [string, 'null'] }
+    invoice_payment_status: { type: [string, 'null'] }
+
+FinancialAccount:
+  type: object
+  required: [id, code, name, account_type, currency, status]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    code: { type: string }
+    name: { type: string }
+    account_type: { type: string, enum: [cash, wave, orange_money, bank, other] }
+    currency: { $ref: '#/CurrencyCode' }
+    status: { type: string, enum: [active, inactive] }
+    allow_negative: { type: boolean, description: 'Absent sans financial_accounts.view_sensitive' }
+    balance: { $ref: '#/Decimal', description: 'Absent sans financial_accounts.view_sensitive' }
+
+FinancialMovement:
+  type: object
+  required: [id, movement_type, direction, amount, currency, balance_after, description, source_type, source_id, reverses_movement_id, occurred_at]
+  additionalProperties: false
+  properties:
+    id: { $ref: '#/Ulid' }
+    movement_type: { type: string }
+    direction: { type: string, enum: [in, out] }
+    amount: { $ref: '#/Decimal' }
+    currency: { $ref: '#/CurrencyCode' }
+    balance_after: { $ref: '#/Decimal' }
+    description: { type: string }
+    source_type: { type: string }
+    source_id: { $ref: '#/Ulid' }
+    reverses_movement_id: { type: [string, 'null'] }
+    occurred_at: { $ref: '#/DateTime' }
+
+CustomerStatement:
+  type: object
+  required: [customer, balances, available_credit, invoices]
+  properties:
+    customer: { type: object }
+    balances: { type: array, items: { type: object } }
+    available_credit: { type: array, items: { type: object } }
+    invoices: { type: array, items: { $ref: '#/Invoice' } }
+
+WhatsappMessage:
+  type: object
+  required: [message, url, share_link]
+  properties:
+    message: { type: string }
+    url: { type: [string, 'null'], description: 'Lien wa.me prérempli ; l’envoi reste une action de l’utilisateur' }
+    share_link: { type: string }
+
+ShareLink:
+  type: object
+  required: [url, expires_in_days]
+  properties:
+    url: { type: string }
+    expires_in_days: { type: integer }
+
+QuotationConversion:
+  type: object
+  required: [order_id, quotation]
+  properties:
+    order_id: { $ref: '#/Ulid' }
+    quotation: { $ref: '#/Quotation' }
+
+CustomerPage:
+  type: object
+  required: [data, meta]
+  properties:
+    data: { type: array, items: { $ref: '#/Customer' } }
+    meta: { $ref: '#/PaginationMeta' }
+
+CustomerEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/Customer' }
+    meta:
+      type: object
+      properties:
+        warnings: { type: array, items: { type: object } }
+        redacted: { type: array, items: { type: string } }
+        payment: { type: [object, 'null'] }
+
+QuotationPage:
+  type: object
+  required: [data, meta]
+  properties:
+    data: { type: array, items: { $ref: '#/Quotation' } }
+    meta: { $ref: '#/PaginationMeta' }
+
+QuotationEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/Quotation' }
+    meta:
+      type: object
+      properties:
+        warnings: { type: array, items: { type: object } }
+        redacted: { type: array, items: { type: string } }
+        payment: { type: [object, 'null'] }
+
+SalesOrderPage:
+  type: object
+  required: [data, meta]
+  properties:
+    data: { type: array, items: { $ref: '#/SalesOrder' } }
+    meta: { $ref: '#/PaginationMeta' }
+
+SalesOrderEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/SalesOrder' }
+    meta:
+      type: object
+      properties:
+        warnings: { type: array, items: { type: object } }
+        redacted: { type: array, items: { type: string } }
+        payment: { type: [object, 'null'] }
+
+DisputeEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/Dispute' }
+    meta:
+      type: object
+      properties:
+        warnings: { type: array, items: { type: object } }
+        redacted: { type: array, items: { type: string } }
+        payment: { type: [object, 'null'] }
+
+DeliveryPage:
+  type: object
+  required: [data, meta]
+  properties:
+    data: { type: array, items: { $ref: '#/Delivery' } }
+    meta: { $ref: '#/PaginationMeta' }
+
+DeliveryList:
+  type: object
+  required: [data]
+  properties:
+    data: { type: array, items: { $ref: '#/Delivery' } }
+    meta:
+      type: object
+      properties:
+        warnings: { type: array, items: { type: object } }
+        redacted: { type: array, items: { type: string } }
+        payment: { type: [object, 'null'] }
+
+DeliveryEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/Delivery' }
+    meta:
+      type: object
+      properties:
+        warnings: { type: array, items: { type: object } }
+        redacted: { type: array, items: { type: string } }
+        payment: { type: [object, 'null'] }
+
+SalesReturnPage:
+  type: object
+  required: [data, meta]
+  properties:
+    data: { type: array, items: { $ref: '#/SalesReturn' } }
+    meta: { $ref: '#/PaginationMeta' }
+
+SalesReturnEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/SalesReturn' }
+    meta:
+      type: object
+      properties:
+        warnings: { type: array, items: { type: object } }
+        redacted: { type: array, items: { type: string } }
+        payment: { type: [object, 'null'] }
+
+InvoicePage:
+  type: object
+  required: [data, meta]
+  properties:
+    data: { type: array, items: { $ref: '#/Invoice' } }
+    meta: { $ref: '#/PaginationMeta' }
+
+InvoiceEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/Invoice' }
+    meta:
+      type: object
+      properties:
+        warnings: { type: array, items: { type: object } }
+        redacted: { type: array, items: { type: string } }
+        payment: { type: [object, 'null'] }
+
+CreditNotePage:
+  type: object
+  required: [data, meta]
+  properties:
+    data: { type: array, items: { $ref: '#/CreditNote' } }
+    meta: { $ref: '#/PaginationMeta' }
+
+CreditNoteList:
+  type: object
+  required: [data]
+  properties:
+    data: { type: array, items: { $ref: '#/CreditNote' } }
+    meta:
+      type: object
+      properties:
+        warnings: { type: array, items: { type: object } }
+        redacted: { type: array, items: { type: string } }
+        payment: { type: [object, 'null'] }
+
+CreditNoteEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/CreditNote' }
+    meta:
+      type: object
+      properties:
+        warnings: { type: array, items: { type: object } }
+        redacted: { type: array, items: { type: string } }
+        payment: { type: [object, 'null'] }
+
+PaymentPage:
+  type: object
+  required: [data, meta]
+  properties:
+    data: { type: array, items: { $ref: '#/Payment' } }
+    meta: { $ref: '#/PaginationMeta' }
+
+PaymentList:
+  type: object
+  required: [data]
+  properties:
+    data: { type: array, items: { $ref: '#/Payment' } }
+    meta:
+      type: object
+      properties:
+        warnings: { type: array, items: { type: object } }
+        redacted: { type: array, items: { type: string } }
+        payment: { type: [object, 'null'] }
+
+PaymentEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/Payment' }
+    meta:
+      type: object
+      properties:
+        warnings: { type: array, items: { type: object } }
+        redacted: { type: array, items: { type: string } }
+        payment: { type: [object, 'null'] }
+
+FinancialAccountList:
+  type: object
+  required: [data]
+  properties:
+    data: { type: array, items: { $ref: '#/FinancialAccount' } }
+    meta:
+      type: object
+      properties:
+        warnings: { type: array, items: { type: object } }
+        redacted: { type: array, items: { type: string } }
+        payment: { type: [object, 'null'] }
+
+FinancialAccountEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/FinancialAccount' }
+    meta:
+      type: object
+      properties:
+        warnings: { type: array, items: { type: object } }
+        redacted: { type: array, items: { type: string } }
+        payment: { type: [object, 'null'] }
+
+FinancialMovementPage:
+  type: object
+  required: [data, meta]
+  properties:
+    data: { type: array, items: { $ref: '#/FinancialMovement' } }
+    meta: { $ref: '#/PaginationMeta' }
+
+CustomerStatementEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/CustomerStatement' }
+    meta:
+      type: object
+      properties:
+        warnings: { type: array, items: { type: object } }
+        redacted: { type: array, items: { type: string } }
+        payment: { type: [object, 'null'] }
+
+WhatsappMessageEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/WhatsappMessage' }
+    meta:
+      type: object
+      properties:
+        warnings: { type: array, items: { type: object } }
+        redacted: { type: array, items: { type: string } }
+        payment: { type: [object, 'null'] }
+
+ShareLinkEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/ShareLink' }
+    meta:
+      type: object
+      properties:
+        warnings: { type: array, items: { type: object } }
+        redacted: { type: array, items: { type: string } }
+        payment: { type: [object, 'null'] }
+
+QuotationConversionEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { $ref: '#/QuotationConversion' }
+    meta:
+      type: object
+      properties:
+        warnings: { type: array, items: { type: object } }
+        redacted: { type: array, items: { type: string } }
+        payment: { type: [object, 'null'] }
+
+# --------------------------------------------------------------------------- Lots 5 et 6 (enveloppes génériques)
+GenericEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { type: [object, 'null'] }
+    meta: { type: object }
+
+GenericNullableEnvelope:
+  type: object
+  required: [data]
+  properties:
+    data: { type: [object, 'null'] }
+
+GenericList:
+  type: object
+  required: [data]
+  properties:
+    data: { type: array, items: { type: object } }
+    meta: { type: object }
+
+GenericPage:
+  type: object
+  required: [data, meta]
+  properties:
+    data: { type: array, items: { type: object } }
+    meta: { $ref: '#/PaginationMeta' }

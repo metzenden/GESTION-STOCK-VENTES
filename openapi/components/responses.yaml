@@ -1,0 +1,38 @@
+ValidationFailed:
+  description: Données invalides (validation_failed, ou règle métier spécifique)
+  content:
+    application/problem+json:
+      schema: { $ref: './schemas.yaml#/Problem' }
+Unauthenticated:
+  description: Authentification requise ou session expirée (unauthenticated, session_expired)
+  content:
+    application/problem+json:
+      schema: { $ref: './schemas.yaml#/Problem' }
+Forbidden:
+  description: Permission insuffisante (forbidden)
+  content:
+    application/problem+json:
+      schema: { $ref: './schemas.yaml#/Problem' }
+NotFound:
+  description: Ressource inexistante ou d'une autre entreprise (not_found, D-054)
+  content:
+    application/problem+json:
+      schema: { $ref: './schemas.yaml#/Problem' }
+Conflict:
+  description: Conflit (invalid_transition, already_processed, role_locked, role_in_use, company_context_required…)
+  content:
+    application/problem+json:
+      schema: { $ref: './schemas.yaml#/Problem' }
+CompanySuspended:
+  description: Entreprise suspendue — lecture seule (company_suspended)
+  content:
+    application/problem+json:
+      schema: { $ref: './schemas.yaml#/Problem' }
+TooManyRequests:
+  description: Limitation de débit (too_many_requests) ; en-tête Retry-After
+  headers:
+    Retry-After:
+      schema: { type: integer }
+  content:
+    application/problem+json:
+      schema: { $ref: './schemas.yaml#/Problem' }

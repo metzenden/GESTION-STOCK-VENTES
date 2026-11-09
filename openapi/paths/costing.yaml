@@ -1,0 +1,600 @@
+landed_cost_categories:
+  get:
+    operationId: listLandedCostCategories
+    tags:
+    - Coûts
+    summary: Catégories de frais d'approche
+    description: Catégories de frais d'approche.
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/LandedCostCategoryList
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: createLandedCostCategory
+    tags:
+    - Coûts
+    summary: Créer une catégorie de frais
+    description: Créer une catégorie de frais.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+              label:
+                type: string
+              default_allocation:
+                type: string
+                enum:
+                - cbm
+                - direct
+            required:
+            - code
+            - label
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/LandedCostCategoryEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+shipments_id_costs:
+  get:
+    operationId: listShipmentCosts
+    tags:
+    - Coûts
+    summary: Frais d'approche de l'arrivage (🔒)
+    description: Frais d'approche de l'arrivage (🔒).
+    parameters:
+    - name: shipment
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ShipmentCostList
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: createShipmentCost
+    tags:
+    - Coûts
+    summary: Ajouter un frais d'approche
+    description: Ajouter un frais d'approche.
+    parameters:
+    - name: shipment
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              category_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              supplier_id:
+                type:
+                - string
+                - 'null'
+              description:
+                type:
+                - string
+                - 'null'
+              currency:
+                $ref: ../components/schemas.yaml#/CurrencyCode
+              amount:
+                $ref: ../components/schemas.yaml#/Decimal
+              exchange_rate:
+                type: string
+              allocation_method:
+                type: string
+                enum:
+                - cbm
+                - direct
+              target_shipment_line_id:
+                type:
+                - string
+                - 'null'
+              is_estimate:
+                type: boolean
+            required:
+            - category_id
+            - currency
+            - amount
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ShipmentCostEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+shipments_id_costs_id:
+  patch:
+    operationId: updateShipmentCost
+    tags:
+    - Coûts
+    summary: Modifier un frais en brouillon
+    description: Modifier un frais en brouillon.
+    parameters:
+    - name: shipment
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - name: cost
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              category_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              supplier_id:
+                type:
+                - string
+                - 'null'
+              description:
+                type:
+                - string
+                - 'null'
+              currency:
+                $ref: ../components/schemas.yaml#/CurrencyCode
+              amount:
+                $ref: ../components/schemas.yaml#/Decimal
+              exchange_rate:
+                type: string
+              allocation_method:
+                type: string
+                enum:
+                - cbm
+                - direct
+              target_shipment_line_id:
+                type:
+                - string
+                - 'null'
+              is_estimate:
+                type: boolean
+              version:
+                type: integer
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ShipmentCostEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+shipments_id_costs_id_confirm:
+  post:
+    operationId: confirmShipmentCost
+    tags:
+    - Coûts
+    summary: Confirmer un frais (engagement du prestataire)
+    description: Confirmer un frais (engagement du prestataire).
+    parameters:
+    - name: shipment
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - name: cost
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ShipmentCostEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+shipments_id_costs_id_cancel:
+  post:
+    operationId: cancelShipmentCost
+    tags:
+    - Coûts
+    summary: Annuler un frais
+    description: Annuler un frais.
+    parameters:
+    - name: shipment
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - name: cost
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ShipmentCostEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+cost_models:
+  get:
+    operationId: listCostModels
+    tags:
+    - Coûts
+    summary: Modèles de formules (versions)
+    description: Modèles de formules (versions).
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/CostModelList
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: createCostModel
+    tags:
+    - Coûts
+    summary: Créer un modèle (brouillon)
+    description: Créer un modèle (brouillon).
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+              name:
+                type: string
+              expression:
+                type: string
+            required:
+            - code
+            - name
+            - expression
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/CostModelEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+cost_models_id_versions:
+  post:
+    operationId: createCostModelVersion
+    tags:
+    - Coûts
+    summary: Nouvelle version (CR-005)
+    description: Nouvelle version (CR-005).
+    parameters:
+    - name: model
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+              expression:
+                type: string
+            required:
+            - expression
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/CostModelEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+cost_models_id_test:
+  post:
+    operationId: testCostModel
+    tags:
+    - Coûts
+    summary: Tester la formule sur un jeu d’essai
+    description: Tester la formule sur un jeu d’essai.
+    parameters:
+    - name: model
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              sample:
+                type: object
+                additionalProperties:
+                  type: string
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/CostModelTestEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+cost_models_id_activate:
+  post:
+    operationId: activateCostModel
+    tags:
+    - Coûts
+    summary: Activer une version testée
+    description: Activer une version testée.
+    parameters:
+    - name: model
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/CostModelEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+shipments_id_landed_costs:
+  get:
+    operationId: listLandedCosts
+    tags:
+    - Coûts
+    summary: Révisions de calcul
+    description: Révisions de calcul.
+    parameters:
+    - name: shipment
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/LandedCostList
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: computeLandedCost
+    tags:
+    - Coûts
+    summary: Lancer un calcul (révision)
+    description: Lancer un calcul (révision).
+    parameters:
+    - name: shipment
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              model_id:
+                type:
+                - string
+                - 'null'
+              rates:
+                type: object
+                additionalProperties:
+                  type: string
+                description: Taux forcés par devise d’achat
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/LandedCostEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+landed_costs_id:
+  get:
+    operationId: getLandedCost
+    tags:
+    - Coûts
+    summary: Détail par ligne, allocations, anomalies
+    description: Détail par ligne, allocations, anomalies.
+    parameters:
+    - name: calculation
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/LandedCostEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+landed_costs_id_finalize:
+  post:
+    operationId: finalizeLandedCost
+    tags:
+    - Coûts
+    summary: Coût définitif et ajustements de valorisation (CR-013)
+    description: Coût définitif et ajustements de valorisation (CR-013).
+    parameters:
+    - name: calculation
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/LandedCostEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended

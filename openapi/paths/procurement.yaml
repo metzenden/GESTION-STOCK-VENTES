@@ -1,0 +1,610 @@
+suppliers:
+  get:
+    operationId: listSuppliers
+    tags:
+    - Achats
+    summary: Fournisseurs
+    description: Fournisseurs.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    - name: filter[q]
+      in: query
+      schema:
+        type: string
+    - name: filter[supplier_type]
+      in: query
+      schema:
+        type: string
+    - name: filter[status]
+      in: query
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/SupplierPage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: createSupplier
+    tags:
+    - Achats
+    summary: Créer un fournisseur
+    description: Créer un fournisseur.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+              name:
+                type: string
+              supplier_type:
+                type: string
+                enum:
+                - goods
+                - forwarder
+                - carrier
+                - customs
+                - other
+              country_code:
+                type:
+                - string
+                - 'null'
+              currency:
+                $ref: ../components/schemas.yaml#/CurrencyCode
+              phone:
+                type:
+                - string
+                - 'null'
+              email:
+                type:
+                - string
+                - 'null'
+              address:
+                type:
+                - string
+                - 'null'
+              contact_name:
+                type:
+                - string
+                - 'null'
+              notes:
+                type:
+                - string
+                - 'null'
+            required:
+            - code
+            - name
+            - currency
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/SupplierEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+suppliers_id:
+  get:
+    operationId: getSupplier
+    tags:
+    - Achats
+    summary: Fournisseur
+    description: Fournisseur.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/SupplierEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  patch:
+    operationId: updateSupplier
+    tags:
+    - Achats
+    summary: Modifier ou désactiver un fournisseur
+    description: Modifier ou désactiver un fournisseur.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+              name:
+                type: string
+              supplier_type:
+                type: string
+                enum:
+                - goods
+                - forwarder
+                - carrier
+                - customs
+                - other
+              country_code:
+                type:
+                - string
+                - 'null'
+              currency:
+                $ref: ../components/schemas.yaml#/CurrencyCode
+              phone:
+                type:
+                - string
+                - 'null'
+              email:
+                type:
+                - string
+                - 'null'
+              address:
+                type:
+                - string
+                - 'null'
+              contact_name:
+                type:
+                - string
+                - 'null'
+              notes:
+                type:
+                - string
+                - 'null'
+              status:
+                type: string
+                enum:
+                - active
+                - inactive
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/SupplierEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+suppliers_id_statement:
+  get:
+    operationId: getSupplierStatement
+    tags:
+    - Achats
+    summary: 'Relevé fournisseur : engagements, règlements, solde par devise (🔒)'
+    description: 'Relevé fournisseur : engagements, règlements, solde par devise (🔒).'
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/SupplierStatementEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+supplier_bills:
+  get:
+    operationId: listSupplierBills
+    tags:
+    - Achats
+    summary: Engagements fournisseurs (🔒)
+    description: Engagements fournisseurs (🔒).
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    - name: filter[supplier_id]
+      in: query
+      schema:
+        type: string
+    - name: filter[status]
+      in: query
+      schema:
+        type: string
+    - name: filter[currency]
+      in: query
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/SupplierBillPage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: createSupplierBill
+    tags:
+    - Achats
+    summary: Engagement manuel ou avoir fournisseur (montant négatif)
+    description: Engagement manuel ou avoir fournisseur (montant négatif).
+    parameters:
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              supplier_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              amount:
+                type: string
+                pattern: ^-?\d+(\.\d{1,4})?$
+              bill_date:
+                type: string
+                format: date
+              due_date:
+                type:
+                - string
+                - 'null'
+                format: date
+              supplier_invoice_ref:
+                type:
+                - string
+                - 'null'
+              description:
+                type:
+                - string
+                - 'null'
+            required:
+            - supplier_id
+            - amount
+            - bill_date
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/SupplierBillEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+purchase_orders:
+  get:
+    operationId: listPurchaseOrders
+    tags:
+    - Achats
+    summary: Commandes d'achat
+    description: Commandes d'achat.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    - name: filter[status]
+      in: query
+      schema:
+        type: string
+    - name: filter[supplier_id]
+      in: query
+      schema:
+        type: string
+    - name: filter[q]
+      in: query
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PurchaseOrderPage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: createPurchaseOrder
+    tags:
+    - Achats
+    summary: Créer une commande d'achat (brouillon)
+    description: Créer une commande d'achat (brouillon).
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              supplier_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              supplier_reference:
+                type:
+                - string
+                - 'null'
+              order_date:
+                type:
+                - string
+                - 'null'
+                format: date
+              estimated_rate:
+                type:
+                - string
+                - 'null'
+              notes:
+                type:
+                - string
+                - 'null'
+              lines:
+                type: array
+                minItems: 1
+                items:
+                  type: object
+                  properties:
+                    variant_id:
+                      $ref: ../components/schemas.yaml#/Ulid
+                    unit_id:
+                      type:
+                      - string
+                      - 'null'
+                    qty_units:
+                      type: integer
+                      minimum: 1
+                    unit_price:
+                      $ref: ../components/schemas.yaml#/Decimal
+                  required:
+                  - variant_id
+                  - qty_units
+                  - unit_price
+            required:
+            - supplier_id
+            - lines
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PurchaseOrderEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+purchase_orders_id:
+  get:
+    operationId: getPurchaseOrder
+    tags:
+    - Achats
+    summary: Commande d'achat
+    description: Commande d'achat.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PurchaseOrderEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  patch:
+    operationId: updatePurchaseOrder
+    tags:
+    - Achats
+    summary: Modifier une commande en brouillon
+    description: Modifier une commande en brouillon.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              supplier_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              supplier_reference:
+                type:
+                - string
+                - 'null'
+              order_date:
+                type:
+                - string
+                - 'null'
+                format: date
+              estimated_rate:
+                type:
+                - string
+                - 'null'
+              notes:
+                type:
+                - string
+                - 'null'
+              lines:
+                type: array
+                minItems: 1
+                items:
+                  type: object
+                  properties:
+                    variant_id:
+                      $ref: ../components/schemas.yaml#/Ulid
+                    unit_id:
+                      type:
+                      - string
+                      - 'null'
+                    qty_units:
+                      type: integer
+                      minimum: 1
+                    unit_price:
+                      $ref: ../components/schemas.yaml#/Decimal
+                  required:
+                  - variant_id
+                  - qty_units
+                  - unit_price
+              version:
+                type: integer
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PurchaseOrderEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+purchase_orders_id_confirm:
+  post:
+    operationId: confirmPurchaseOrder
+    tags:
+    - Achats
+    summary: 'Confirmer : engagement du montant total (PUR-001)'
+    description: 'Confirmer : engagement du montant total (PUR-001).'
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PurchaseOrderEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+purchase_orders_id_close:
+  post:
+    operationId: closePurchaseOrder
+    tags:
+    - Achats
+    summary: Clôturer (reliquat abandonné, PUR-005)
+    description: Clôturer (reliquat abandonné, PUR-005).
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              release_remaining:
+                type: boolean
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PurchaseOrderEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+purchase_orders_id_cancel:
+  post:
+    operationId: cancelPurchaseOrder
+    tags:
+    - Achats
+    summary: Annuler sans réception ; engagement compensé (PUR-004)
+    description: Annuler sans réception ; engagement compensé (PUR-004).
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PurchaseOrderEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended

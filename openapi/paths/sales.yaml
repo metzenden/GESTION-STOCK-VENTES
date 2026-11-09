@@ -1,0 +1,2770 @@
+customers:
+  get:
+    operationId: listCustomers
+    tags:
+    - Ventes
+    summary: Clients (recherche nom, code, téléphone)
+    description: Clients (recherche nom, code, téléphone).
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    - $ref: ../components/parameters.yaml#/Search
+    - name: filter[status]
+      in: query
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/CustomerPage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: createCustomer
+    tags:
+    - Ventes
+    summary: Créer un client
+    description: Créer un client.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type:
+                - string
+                - 'null'
+              name:
+                type: string
+              customer_type:
+                type: string
+                enum:
+                - individual
+                - business
+              phone:
+                type:
+                - string
+                - 'null'
+              email:
+                type:
+                - string
+                - 'null'
+              address:
+                type:
+                - string
+                - 'null'
+              default_price_list_id:
+                type:
+                - string
+                - 'null'
+              payment_terms_days:
+                type:
+                - integer
+                - 'null'
+            required:
+            - name
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/CustomerEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+customers_id:
+  get:
+    operationId: getCustomer
+    tags:
+    - Ventes
+    summary: Client
+    description: Client.
+    parameters:
+    - name: customer
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/CustomerEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  patch:
+    operationId: updateCustomer
+    tags:
+    - Ventes
+    summary: Modifier un client
+    description: Modifier un client.
+    parameters:
+    - name: customer
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type:
+                - string
+                - 'null'
+              name:
+                type: string
+              customer_type:
+                type: string
+                enum:
+                - individual
+                - business
+              phone:
+                type:
+                - string
+                - 'null'
+              email:
+                type:
+                - string
+                - 'null'
+              address:
+                type:
+                - string
+                - 'null'
+              default_price_list_id:
+                type:
+                - string
+                - 'null'
+              payment_terms_days:
+                type:
+                - integer
+                - 'null'
+              status:
+                type: string
+                enum:
+                - active
+                - inactive
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/CustomerEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+customers_id_statement:
+  get:
+    operationId: getCustomerStatement
+    tags:
+    - Facturation
+    summary: 'Relevé client : factures, soldes, avoirs disponibles'
+    description: 'Relevé client : factures, soldes, avoirs disponibles.'
+    parameters:
+    - name: customer
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/CustomerStatementEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+customers_id_credits:
+  get:
+    operationId: listCustomerCredits
+    tags:
+    - Facturation
+    summary: Avoirs disponibles du client
+    description: Avoirs disponibles du client.
+    parameters:
+    - name: customer
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/CreditNoteList
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+quotations:
+  get:
+    operationId: listQuotations
+    tags:
+    - Ventes
+    summary: Devis
+    description: Devis.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    - name: filter[status]
+      in: query
+      schema:
+        type: string
+    - name: filter[customer_id]
+      in: query
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/QuotationPage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: createQuotation
+    tags:
+    - Ventes
+    summary: Créer un devis
+    description: Créer un devis.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              customer_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              price_list_id:
+                type:
+                - string
+                - 'null'
+              warehouse_id:
+                type:
+                - string
+                - 'null'
+              valid_until:
+                type:
+                - string
+                - 'null'
+                format: date
+              notes:
+                type:
+                - string
+                - 'null'
+              global_discount:
+                type:
+                - object
+                - 'null'
+                properties:
+                  type:
+                    type: string
+                    enum:
+                    - percent
+                    - amount
+                  value:
+                    type: string
+              lines:
+                type: array
+                minItems: 1
+                items:
+                  type: object
+                  properties:
+                    variant_id:
+                      $ref: ../components/schemas.yaml#/Ulid
+                    unit_id:
+                      type:
+                      - string
+                      - 'null'
+                    qty_units:
+                      type: integer
+                      minimum: 1
+                    unit_price:
+                      type:
+                      - string
+                      - 'null'
+                    discount_type:
+                      type:
+                      - string
+                      - 'null'
+                      enum:
+                      - percent
+                      - amount
+                      - null
+                    discount_value:
+                      type:
+                      - string
+                      - 'null'
+                    tax_rate_id:
+                      type:
+                      - string
+                      - 'null'
+                    description:
+                      type:
+                      - string
+                      - 'null'
+                  required:
+                  - variant_id
+                  - qty_units
+            required:
+            - customer_id
+            - lines
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/QuotationEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+quotations_id:
+  get:
+    operationId: getQuotation
+    tags:
+    - Ventes
+    summary: Devis
+    description: Devis.
+    parameters:
+    - name: quotation
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/QuotationEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  patch:
+    operationId: updateQuotation
+    tags:
+    - Ventes
+    summary: Modifier un devis (repasse en brouillon)
+    description: Modifier un devis (repasse en brouillon).
+    parameters:
+    - name: quotation
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              valid_until:
+                type:
+                - string
+                - 'null'
+                format: date
+              notes:
+                type:
+                - string
+                - 'null'
+              warehouse_id:
+                type:
+                - string
+                - 'null'
+              global_discount:
+                type:
+                - object
+                - 'null'
+                properties:
+                  type:
+                    type: string
+                    enum:
+                    - percent
+                    - amount
+                  value:
+                    type: string
+              lines:
+                type: array
+                minItems: 1
+                items:
+                  type: object
+                  properties:
+                    variant_id:
+                      $ref: ../components/schemas.yaml#/Ulid
+                    unit_id:
+                      type:
+                      - string
+                      - 'null'
+                    qty_units:
+                      type: integer
+                      minimum: 1
+                    unit_price:
+                      type:
+                      - string
+                      - 'null'
+                    discount_type:
+                      type:
+                      - string
+                      - 'null'
+                      enum:
+                      - percent
+                      - amount
+                      - null
+                    discount_value:
+                      type:
+                      - string
+                      - 'null'
+                    tax_rate_id:
+                      type:
+                      - string
+                      - 'null'
+                    description:
+                      type:
+                      - string
+                      - 'null'
+                  required:
+                  - variant_id
+                  - qty_units
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/QuotationEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+quotations_id_send:
+  post:
+    operationId: sendQuotation
+    tags:
+    - Ventes
+    summary: Marquer envoyé
+    description: Marquer envoyé.
+    parameters:
+    - name: quotation
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/QuotationEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+quotations_id_accept:
+  post:
+    operationId: acceptQuotation
+    tags:
+    - Ventes
+    summary: Marquer accepté
+    description: Marquer accepté.
+    parameters:
+    - name: quotation
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/QuotationEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+quotations_id_cancel:
+  post:
+    operationId: cancelQuotation
+    tags:
+    - Ventes
+    summary: Annuler le devis
+    description: Annuler le devis.
+    parameters:
+    - name: quotation
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/QuotationEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+quotations_id_convert:
+  post:
+    operationId: convertQuotation
+    tags:
+    - Ventes
+    summary: Convertir en commande brouillon (une seule fois)
+    description: Convertir en commande brouillon (une seule fois).
+    parameters:
+    - name: quotation
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              warehouse_id:
+                type:
+                - string
+                - 'null'
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/QuotationConversionEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+sales_orders:
+  get:
+    operationId: listSalesOrders
+    tags:
+    - Ventes
+    summary: Commandes
+    description: Commandes.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    - name: filter[status]
+      in: query
+      schema:
+        type: string
+    - name: filter[customer_id]
+      in: query
+      schema:
+        type: string
+    - name: filter[channel]
+      in: query
+      schema:
+        type: string
+    - $ref: ../components/parameters.yaml#/Search
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/SalesOrderPage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: createSalesOrder
+    tags:
+    - Ventes
+    summary: Créer une commande brouillon
+    description: Créer une commande brouillon.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              customer_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              price_list_id:
+                type:
+                - string
+                - 'null'
+              warehouse_id:
+                type:
+                - string
+                - 'null'
+              fulfilment_mode:
+                type: string
+                enum:
+                - pickup
+                - delivery
+              recipient_name:
+                type:
+                - string
+                - 'null'
+              recipient_phone:
+                type:
+                - string
+                - 'null'
+              delivery_address:
+                type:
+                - string
+                - 'null'
+              notes:
+                type:
+                - string
+                - 'null'
+              global_discount:
+                type:
+                - object
+                - 'null'
+                properties:
+                  type:
+                    type: string
+                    enum:
+                    - percent
+                    - amount
+                  value:
+                    type: string
+              lines:
+                type: array
+                minItems: 1
+                items:
+                  type: object
+                  properties:
+                    variant_id:
+                      $ref: ../components/schemas.yaml#/Ulid
+                    unit_id:
+                      type:
+                      - string
+                      - 'null'
+                    qty_units:
+                      type: integer
+                      minimum: 1
+                    unit_price:
+                      type:
+                      - string
+                      - 'null'
+                    discount_type:
+                      type:
+                      - string
+                      - 'null'
+                      enum:
+                      - percent
+                      - amount
+                      - null
+                    discount_value:
+                      type:
+                      - string
+                      - 'null'
+                    tax_rate_id:
+                      type:
+                      - string
+                      - 'null'
+                    description:
+                      type:
+                      - string
+                      - 'null'
+                  required:
+                  - variant_id
+                  - qty_units
+            required:
+            - customer_id
+            - lines
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/SalesOrderEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+sales_orders_id:
+  get:
+    operationId: getSalesOrder
+    tags:
+    - Ventes
+    summary: Commande (lignes, facture, livraisons, litiges)
+    description: Commande (lignes, facture, livraisons, litiges).
+    parameters:
+    - name: order
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/SalesOrderEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  patch:
+    operationId: updateSalesOrder
+    tags:
+    - Ventes
+    summary: Modifier une commande brouillon
+    description: Modifier une commande brouillon.
+    parameters:
+    - name: order
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              customer_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              price_list_id:
+                type:
+                - string
+                - 'null'
+              warehouse_id:
+                type:
+                - string
+                - 'null'
+              fulfilment_mode:
+                type: string
+                enum:
+                - pickup
+                - delivery
+              recipient_name:
+                type:
+                - string
+                - 'null'
+              recipient_phone:
+                type:
+                - string
+                - 'null'
+              delivery_address:
+                type:
+                - string
+                - 'null'
+              notes:
+                type:
+                - string
+                - 'null'
+              global_discount:
+                type:
+                - object
+                - 'null'
+                properties:
+                  type:
+                    type: string
+                    enum:
+                    - percent
+                    - amount
+                  value:
+                    type: string
+              lines:
+                type: array
+                minItems: 1
+                items:
+                  type: object
+                  properties:
+                    variant_id:
+                      $ref: ../components/schemas.yaml#/Ulid
+                    unit_id:
+                      type:
+                      - string
+                      - 'null'
+                    qty_units:
+                      type: integer
+                      minimum: 1
+                    unit_price:
+                      type:
+                      - string
+                      - 'null'
+                    discount_type:
+                      type:
+                      - string
+                      - 'null'
+                      enum:
+                      - percent
+                      - amount
+                      - null
+                    discount_value:
+                      type:
+                      - string
+                      - 'null'
+                    tax_rate_id:
+                      type:
+                      - string
+                      - 'null'
+                    description:
+                      type:
+                      - string
+                      - 'null'
+                  required:
+                  - variant_id
+                  - qty_units
+              version:
+                type: integer
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/SalesOrderEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+sales_orders_id_submit:
+  post:
+    operationId: submitSalesOrder
+    tags:
+    - Ventes
+    summary: 'Confirmer : réservation complète + facture (ou approbation)'
+    description: 'Confirmer : réservation complète + facture (ou approbation).'
+    parameters:
+    - name: order
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/SalesOrderEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+sales_orders_id_cancel:
+  post:
+    operationId: cancelSalesOrder
+    tags:
+    - Ventes
+    summary: 'Annuler : libère les réservations, avoir total'
+    description: 'Annuler : libère les réservations, avoir total.'
+    parameters:
+    - name: order
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              reason:
+                type: string
+            required:
+            - reason
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/SalesOrderEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+sales_orders_id_cancel_remaining:
+  post:
+    operationId: cancelSalesOrderRemaining
+    tags:
+    - Ventes
+    summary: Annuler le reliquat (avoir partiel)
+    description: Annuler le reliquat (avoir partiel).
+    parameters:
+    - name: order
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              reason:
+                type: string
+            required:
+            - reason
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/SalesOrderEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+sales_orders_id_disputes:
+  post:
+    operationId: openDispute
+    tags:
+    - Ventes
+    summary: Ouvrir un litige
+    description: Ouvrir un litige.
+    parameters:
+    - name: order
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              reason:
+                type: string
+            required:
+            - reason
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/DisputeEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+disputes_id_resolve:
+  post:
+    operationId: resolveDispute
+    tags:
+    - Ventes
+    summary: Résoudre un litige
+    description: Résoudre un litige.
+    parameters:
+    - name: dispute
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              resolution:
+                type: string
+            required:
+            - resolution
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/DisputeEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+counter_sales:
+  post:
+    operationId: createCounterSale
+    tags:
+    - Ventes
+    summary: 'Vente comptoir : commande, facture, retrait et paiement en une transaction'
+    description: 'Vente comptoir : commande, facture, retrait et paiement en une transaction.'
+    parameters:
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              customer_id:
+                type:
+                - string
+                - 'null'
+              warehouse_id:
+                type:
+                - string
+                - 'null'
+              global_discount:
+                type:
+                - object
+                - 'null'
+                properties:
+                  type:
+                    type: string
+                    enum:
+                    - percent
+                    - amount
+                  value:
+                    type: string
+              lines:
+                type: array
+                minItems: 1
+                items:
+                  type: object
+                  properties:
+                    variant_id:
+                      $ref: ../components/schemas.yaml#/Ulid
+                    unit_id:
+                      type:
+                      - string
+                      - 'null'
+                    qty_units:
+                      type: integer
+                      minimum: 1
+                    unit_price:
+                      type:
+                      - string
+                      - 'null'
+                    discount_type:
+                      type:
+                      - string
+                      - 'null'
+                      enum:
+                      - percent
+                      - amount
+                      - null
+                    discount_value:
+                      type:
+                      - string
+                      - 'null'
+                    tax_rate_id:
+                      type:
+                      - string
+                      - 'null'
+                    description:
+                      type:
+                      - string
+                      - 'null'
+                  required:
+                  - variant_id
+                  - qty_units
+              payment:
+                type:
+                - object
+                - 'null'
+                properties:
+                  method:
+                    type: string
+                    enum:
+                    - cash
+                    - wave
+                    - orange_money
+                    - bank_transfer
+                  financial_account_id:
+                    $ref: ../components/schemas.yaml#/Ulid
+                  amount:
+                    type:
+                    - string
+                    - 'null'
+                  external_reference:
+                    type:
+                    - string
+                    - 'null'
+            required:
+            - lines
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/SalesOrderEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+sales_orders_id_deliveries:
+  get:
+    operationId: listOrderDeliveries
+    tags:
+    - Ventes
+    summary: Livraisons de la commande
+    description: Livraisons de la commande.
+    parameters:
+    - name: order
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/DeliveryList
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: createDelivery
+    tags:
+    - Ventes
+    summary: Créer une livraison (tout ou partie du restant)
+    description: Créer une livraison (tout ou partie du restant).
+    parameters:
+    - name: order
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              lines:
+                type: object
+                additionalProperties:
+                  type: integer
+              mode:
+                type: string
+                enum:
+                - pickup
+                - delivery
+              recipient_name:
+                type:
+                - string
+                - 'null'
+              recipient_phone:
+                type:
+                - string
+                - 'null'
+              address:
+                type:
+                - string
+                - 'null'
+              courier:
+                type:
+                - string
+                - 'null'
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/DeliveryEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+deliveries:
+  get:
+    operationId: listDeliveries
+    tags:
+    - Ventes
+    summary: Livraisons
+    description: Livraisons.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    - name: filter[status]
+      in: query
+      schema:
+        type: string
+    - name: filter[mode]
+      in: query
+      schema:
+        type: string
+    - name: filter[sales_order_id]
+      in: query
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/DeliveryPage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+deliveries_id:
+  get:
+    operationId: getDelivery
+    tags:
+    - Ventes
+    summary: Livraison (lignes et lots)
+    description: Livraison (lignes et lots).
+    parameters:
+    - name: delivery
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/DeliveryEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+deliveries_id_ready:
+  post:
+    operationId: readyDelivery
+    tags:
+    - Ventes
+    summary: Préparation terminée
+    description: Préparation terminée.
+    parameters:
+    - name: delivery
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/DeliveryEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+deliveries_id_ship:
+  post:
+    operationId: shipDelivery
+    tags:
+    - Ventes
+    summary: Expédier (lots FIFO ou affectation manuelle)
+    description: Expédier (lots FIFO ou affectation manuelle).
+    parameters:
+    - name: delivery
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              courier:
+                type:
+                - string
+                - 'null'
+              allocations:
+                type: object
+                additionalProperties:
+                  type: object
+                  additionalProperties:
+                    type: integer
+                description: ligne → (lot → quantité) ; FIFO par défaut
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/DeliveryEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+deliveries_id_deliver:
+  post:
+    operationId: deliverDelivery
+    tags:
+    - Ventes
+    summary: Remettre (totale ou partielle) ou retrait sur place
+    description: Remettre (totale ou partielle) ou retrait sur place.
+    parameters:
+    - name: delivery
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              received:
+                type: object
+                additionalProperties:
+                  type: integer
+              allocations:
+                type: object
+                additionalProperties:
+                  type: object
+                  additionalProperties:
+                    type: integer
+                description: ligne → (lot → quantité) ; FIFO par défaut
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/DeliveryEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+deliveries_id_fail:
+  post:
+    operationId: failDelivery
+    tags:
+    - Ventes
+    summary: Signaler un échec de livraison
+    description: Signaler un échec de livraison.
+    parameters:
+    - name: delivery
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              reason:
+                type: string
+            required:
+            - reason
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/DeliveryEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+deliveries_id_return:
+  post:
+    operationId: returnDeliveryToWarehouse
+    tags:
+    - Ventes
+    summary: Retour au dépôt (nouvelle tentative)
+    description: Retour au dépôt (nouvelle tentative).
+    parameters:
+    - name: delivery
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/DeliveryEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+deliveries_id_cancel:
+  post:
+    operationId: cancelDelivery
+    tags:
+    - Ventes
+    summary: Annuler une livraison non expédiée
+    description: Annuler une livraison non expédiée.
+    parameters:
+    - name: delivery
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/DeliveryEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+returns:
+  get:
+    operationId: listReturns
+    tags:
+    - Ventes
+    summary: Retours
+    description: Retours.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    - name: filter[status]
+      in: query
+      schema:
+        type: string
+    - name: filter[sales_order_id]
+      in: query
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/SalesReturnPage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: createReturn
+    tags:
+    - Ventes
+    summary: Créer un retour
+    description: Créer un retour.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              sales_order_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              return_type:
+                type: string
+                enum:
+                - refused
+                - defective
+                - exchange
+                - other
+              warehouse_id:
+                type:
+                - string
+                - 'null'
+              reason:
+                type:
+                - string
+                - 'null'
+              lines:
+                type: object
+                additionalProperties:
+                  type: integer
+            required:
+            - sales_order_id
+            - return_type
+            - lines
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/SalesReturnEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+returns_id:
+  get:
+    operationId: getReturn
+    tags:
+    - Ventes
+    summary: Retour
+    description: Retour.
+    parameters:
+    - name: return
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/SalesReturnEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+returns_id_receive:
+  post:
+    operationId: receiveReturn
+    tags:
+    - Ventes
+    summary: Réceptionner (lot d’origine, blocage contrôle)
+    description: Réceptionner (lot d’origine, blocage contrôle).
+    parameters:
+    - name: return
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/SalesReturnEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+returns_id_inspect:
+  post:
+    operationId: inspectReturn
+    tags:
+    - Ventes
+    summary: 'Décision par ligne : remise en stock ou endommagé'
+    description: 'Décision par ligne : remise en stock ou endommagé.'
+    parameters:
+    - name: return
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              decisions:
+                type: object
+                additionalProperties:
+                  type: string
+                  enum:
+                  - restock
+                  - damaged
+            required:
+            - decisions
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/SalesReturnEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+returns_id_close:
+  post:
+    operationId: closeReturn
+    tags:
+    - Ventes
+    summary: 'Clôturer : avoir de retour (et échange)'
+    description: 'Clôturer : avoir de retour (et échange).'
+    parameters:
+    - name: return
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/SalesReturnEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+returns_id_cancel:
+  post:
+    operationId: cancelReturn
+    tags:
+    - Ventes
+    summary: Annuler un retour brouillon
+    description: Annuler un retour brouillon.
+    parameters:
+    - name: return
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/SalesReturnEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+invoices:
+  get:
+    operationId: listInvoices
+    tags:
+    - Facturation
+    summary: Factures
+    description: Factures.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    - name: filter[payment_status]
+      in: query
+      schema:
+        type: string
+    - name: filter[status]
+      in: query
+      schema:
+        type: string
+    - name: filter[customer_id]
+      in: query
+      schema:
+        type: string
+    - name: filter[overdue]
+      in: query
+      schema:
+        type: boolean
+    - name: filter[from]
+      in: query
+      schema:
+        type: string
+        format: date
+    - name: filter[to]
+      in: query
+      schema:
+        type: string
+        format: date
+    - $ref: ../components/parameters.yaml#/Search
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/InvoicePage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+invoices_id:
+  get:
+    operationId: getInvoice
+    tags:
+    - Facturation
+    summary: Facture (lignes, règlements, imputations)
+    description: Facture (lignes, règlements, imputations).
+    parameters:
+    - name: invoice
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/InvoiceEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+invoices_id_pdf:
+  get:
+    operationId: getInvoicePdf
+    tags:
+    - Facturation
+    summary: Facture PDF
+    description: Facture PDF.
+    parameters:
+    - name: invoice
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: PDF
+        content:
+          application/pdf:
+            schema:
+              type: string
+              format: binary
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+invoices_id_share_link:
+  get:
+    operationId: getInvoiceShareLink
+    tags:
+    - Facturation
+    summary: Lien signé de partage (30 jours)
+    description: Lien signé de partage (30 jours).
+    parameters:
+    - name: invoice
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ShareLinkEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+invoices_id_whatsapp:
+  get:
+    operationId: getInvoiceWhatsappMessage
+    tags:
+    - Facturation
+    summary: Message WhatsApp prérempli
+    description: Message WhatsApp prérempli.
+    parameters:
+    - name: invoice
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/WhatsappMessageEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+invoices_id_payments:
+  get:
+    operationId: listInvoicePayments
+    tags:
+    - Facturation
+    summary: Règlements de la facture
+    description: Règlements de la facture.
+    parameters:
+    - name: invoice
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PaymentList
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: createPayment
+    tags:
+    - Facturation
+    summary: Enregistrer un règlement (PAY-001 à PAY-005)
+    description: Enregistrer un règlement (PAY-001 à PAY-005).
+    parameters:
+    - name: invoice
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              method:
+                type: string
+                enum:
+                - cash
+                - wave
+                - orange_money
+                - bank_transfer
+              financial_account_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              amount:
+                $ref: ../components/schemas.yaml#/Decimal
+              paid_at:
+                type: string
+                format: date-time
+              external_reference:
+                type:
+                - string
+                - 'null'
+            required:
+            - method
+            - financial_account_id
+            - amount
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PaymentEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+invoices_id_change_method:
+  post:
+    operationId: changePaymentMethod
+    tags:
+    - Facturation
+    summary: Changer de moyen de paiement (contre-passation + nouvel encaissement)
+    description: Changer de moyen de paiement (contre-passation + nouvel encaissement).
+    parameters:
+    - name: invoice
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              method:
+                type: string
+                enum:
+                - cash
+                - wave
+                - orange_money
+                - bank_transfer
+              financial_account_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              reason:
+                type: string
+            required:
+            - method
+            - financial_account_id
+            - reason
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PaymentEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+payments:
+  get:
+    operationId: listPayments
+    tags:
+    - Facturation
+    summary: Règlements
+    description: Règlements.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    - name: filter[method]
+      in: query
+      schema:
+        type: string
+    - name: filter[customer_id]
+      in: query
+      schema:
+        type: string
+    - name: filter[invoice_id]
+      in: query
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PaymentPage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+payments_id:
+  get:
+    operationId: getPayment
+    tags:
+    - Facturation
+    summary: Règlement
+    description: Règlement.
+    parameters:
+    - name: payment
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PaymentEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+payments_id_receipt:
+  get:
+    operationId: getPaymentReceipt
+    tags:
+    - Facturation
+    summary: Reçu PDF
+    description: Reçu PDF.
+    parameters:
+    - name: payment
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: PDF
+        content:
+          application/pdf:
+            schema:
+              type: string
+              format: binary
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+payments_id_reverse:
+  post:
+    operationId: reversePayment
+    tags:
+    - Facturation
+    summary: Contre-passer un règlement (PAY-006)
+    description: Contre-passer un règlement (PAY-006).
+    parameters:
+    - name: payment
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              reason:
+                type: string
+            required:
+            - reason
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PaymentEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+receivables:
+  get:
+    operationId: listReceivables
+    tags:
+    - Facturation
+    summary: Créances (factures avec solde dû)
+    description: Créances (factures avec solde dû).
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    - name: filter[overdue]
+      in: query
+      schema:
+        type: boolean
+    - name: filter[customer_id]
+      in: query
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/InvoicePage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+receivables_id_reminder:
+  get:
+    operationId: getReminder
+    tags:
+    - Facturation
+    summary: Message de relance WhatsApp
+    description: Message de relance WhatsApp.
+    parameters:
+    - name: invoice
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/WhatsappMessageEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+credit_notes:
+  get:
+    operationId: listCreditNotes
+    tags:
+    - Facturation
+    summary: Avoirs
+    description: Avoirs.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    - name: filter[status]
+      in: query
+      schema:
+        type: string
+    - name: filter[customer_id]
+      in: query
+      schema:
+        type: string
+    - name: filter[kind]
+      in: query
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/CreditNotePage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: createCreditNote
+    tags:
+    - Facturation
+    summary: Avoir commercial ou correction de prix (brouillon)
+    description: Avoir commercial ou correction de prix (brouillon).
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              customer_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              origin_invoice_id:
+                type:
+                - string
+                - 'null'
+              kind:
+                type: string
+                enum:
+                - commercial
+                - price_correction
+              reason:
+                type: string
+              currency:
+                $ref: ../components/schemas.yaml#/CurrencyCode
+              lines:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    description:
+                      type: string
+                    amount:
+                      $ref: ../components/schemas.yaml#/Decimal
+                  required:
+                  - description
+                  - amount
+            required:
+            - customer_id
+            - kind
+            - reason
+            - lines
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/CreditNoteEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+credit_notes_id:
+  get:
+    operationId: getCreditNote
+    tags:
+    - Facturation
+    summary: Avoir
+    description: Avoir.
+    parameters:
+    - name: note
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/CreditNoteEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+credit_notes_id_issue:
+  post:
+    operationId: issueCreditNote
+    tags:
+    - Facturation
+    summary: Émettre (numéro, imputation sur la facture d’origine)
+    description: Émettre (numéro, imputation sur la facture d’origine).
+    parameters:
+    - name: note
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/CreditNoteEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+credit_notes_id_apply:
+  post:
+    operationId: applyCreditNote
+    tags:
+    - Facturation
+    summary: Imputer sur une facture
+    description: Imputer sur une facture.
+    parameters:
+    - name: note
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              invoice_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              amount:
+                $ref: ../components/schemas.yaml#/Decimal
+            required:
+            - invoice_id
+            - amount
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/CreditNoteEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+credit_notes_id_pdf:
+  get:
+    operationId: getCreditNotePdf
+    tags:
+    - Facturation
+    summary: Avoir PDF
+    description: Avoir PDF.
+    parameters:
+    - name: note
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: PDF
+        content:
+          application/pdf:
+            schema:
+              type: string
+              format: binary
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+financial_accounts:
+  get:
+    operationId: listFinancialAccounts
+    tags:
+    - Trésorerie
+    summary: Comptes financiers (solde masqué sans permission)
+    description: Comptes financiers (solde masqué sans permission).
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/FinancialAccountList
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: createFinancialAccount
+    tags:
+    - Trésorerie
+    summary: Créer un compte
+    description: Créer un compte.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+              name:
+                type: string
+              account_type:
+                type: string
+                enum:
+                - cash
+                - wave
+                - orange_money
+                - bank
+                - other
+              currency:
+                $ref: ../components/schemas.yaml#/CurrencyCode
+              allow_negative:
+                type: boolean
+            required:
+            - code
+            - name
+            - account_type
+            - currency
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/FinancialAccountEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+financial_accounts_id:
+  patch:
+    operationId: updateFinancialAccount
+    tags:
+    - Trésorerie
+    summary: Modifier un compte
+    description: Modifier un compte.
+    parameters:
+    - name: account
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+              allow_negative:
+                type: boolean
+              status:
+                type: string
+                enum:
+                - active
+                - inactive
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/FinancialAccountEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+financial_accounts_id_movements:
+  get:
+    operationId: listFinancialMovements
+    tags:
+    - Trésorerie
+    summary: Mouvements du compte
+    description: Mouvements du compte.
+    parameters:
+    - name: account
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/FinancialMovementPage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+public_invoice_pdf:
+  get:
+    operationId: getPublicInvoicePdf
+    tags:
+    - Facturation
+    summary: PDF par lien signé (sans session)
+    description: 'Signature absente ou expirée : 404.'
+    security: []
+    parameters:
+    - name: company
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - name: invoice
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - name: expires
+      in: query
+      schema:
+        type: integer
+    - name: signature
+      in: query
+      schema:
+        type: string
+    responses:
+      '200':
+        description: PDF
+        content:
+          application/pdf:
+            schema:
+              type: string
+              format: binary
+      '404':
+        $ref: ../components/responses.yaml#/NotFound

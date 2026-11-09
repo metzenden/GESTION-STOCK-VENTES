@@ -1,0 +1,43 @@
+# Surcharges préproduction / production. Seul Caddy est exposé (80/443).
+# Utilisation : PHP_BUILD_TARGET=prod docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+services:
+  app:
+    volumes:
+      - storage:/var/www/backend/storage
+  queue:
+    volumes:
+      - storage:/var/www/backend/storage
+  scheduler:
+    volumes:
+      - storage:/var/www/backend/storage
+
+  caddy:
+    image: caddy:2.8-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN}
+    volumes:
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./frontend/dist:/srv/spa:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on: [nginx]
+    restart: unless-stopped
+
+  # L8-03 : sauvegardes chiffrées externes (restic), quotidiennes.
+  backup:
+    build: ./docker/backup
+    env_file: .env
+    volumes:
+      - storage:/var/www/backend/storage:ro
+      - backup-state:/var/backup-state
+    depends_on: [mysql]
+    restart: unless-stopped
+
+volumes:
+  backup-state:
+  storage:
+  caddy-data:
+  caddy-config:

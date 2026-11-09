@@ -1,0 +1,1095 @@
+categories:
+  get:
+    operationId: listCategories
+    tags:
+    - Catalogue
+    summary: Arborescence des catégories
+    description: Arborescence des catégories.
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/CategoryList
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+  post:
+    operationId: createCategory
+    tags:
+    - Catalogue
+    summary: Créer une catégorie (nom unique par parent)
+    description: Créer une catégorie (nom unique par parent).
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+              parent_id:
+                type:
+                - string
+                - 'null'
+            required:
+            - name
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/CategoryEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+categories_id:
+  patch:
+    operationId: updateCategory
+    tags:
+    - Catalogue
+    summary: Renommer, déplacer ou désactiver une catégorie
+    description: Renommer, déplacer ou désactiver une catégorie.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+              parent_id:
+                type:
+                - string
+                - 'null'
+              is_active:
+                type: boolean
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/CategoryEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+  delete:
+    operationId: deleteCategory
+    tags:
+    - Catalogue
+    summary: Supprimer une catégorie vide
+    description: Supprimer une catégorie vide.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    responses:
+      '204':
+        description: Succès
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+attributes:
+  get:
+    operationId: listAttributes
+    tags:
+    - Catalogue
+    summary: Attributs de variantes et leurs valeurs
+    description: Attributs de variantes et leurs valeurs.
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/AttributeList
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+  post:
+    operationId: createAttribute
+    tags:
+    - Catalogue
+    summary: Créer un attribut
+    description: Créer un attribut.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+            required:
+            - name
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/AttributeEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+attributes_id_values:
+  post:
+    operationId: createAttributeValue
+    tags:
+    - Catalogue
+    summary: Ajouter une valeur à un attribut
+    description: Ajouter une valeur à un attribut.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              value:
+                type: string
+              position:
+                type: integer
+            required:
+            - value
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/AttributeEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+products:
+  get:
+    operationId: listProducts
+    tags:
+    - Catalogue
+    summary: Produits (recherche nom, référence, SKU ou code-barres ; filtres statut et catégorie)
+    description: Produits (recherche nom, référence, SKU ou code-barres ; filtres statut et catégorie).
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    - $ref: ../components/parameters.yaml#/Search
+    - name: filter[status]
+      in: query
+      schema:
+        type: string
+        enum:
+        - active
+        - inactive
+        - archived
+    - name: filter[category_id]
+      in: query
+      schema:
+        type: string
+    - name: sort
+      in: query
+      schema:
+        type: string
+        enum:
+        - name
+        - -name
+        - reference
+        - -reference
+        - -created_at
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ProductSummaryPage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+  post:
+    operationId: createProduct
+    tags:
+    - Catalogue
+    summary: Créer un produit et ses variantes (variante par défaut si aucune)
+    description: Créer un produit et ses variantes (variante par défaut si aucune).
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              reference:
+                type: string
+              name:
+                type: string
+              description:
+                type:
+                - string
+                - 'null'
+              category_id:
+                type:
+                - string
+                - 'null'
+              product_type:
+                type: string
+                enum:
+                - stock
+                - service
+              base_unit_label:
+                type: string
+              pieces_per_carton:
+                type:
+                - integer
+                - 'null'
+              low_stock_threshold:
+                type:
+                - integer
+                - 'null'
+              barcode:
+                type:
+                - string
+                - 'null'
+              carton_barcode:
+                type:
+                - string
+                - 'null'
+              variants:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    sku:
+                      type: string
+                    label:
+                      type: string
+                    attribute_value_ids:
+                      type: array
+                      items:
+                        $ref: ../components/schemas.yaml#/Ulid
+                    pieces_per_carton:
+                      type:
+                      - integer
+                      - 'null'
+                    low_stock_threshold:
+                      type:
+                      - integer
+                      - 'null'
+                    barcode:
+                      type:
+                      - string
+                      - 'null'
+                    carton_barcode:
+                      type:
+                      - string
+                      - 'null'
+                  required:
+                  - sku
+            required:
+            - reference
+            - name
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ProductEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+products_id:
+  get:
+    operationId: getProduct
+    tags:
+    - Catalogue
+    summary: Produit, variantes, conditionnements et photos
+    description: Produit, variantes, conditionnements et photos.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ProductEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+  patch:
+    operationId: updateProduct
+    tags:
+    - Catalogue
+    summary: Modifier un produit (If-Match facultatif pour le verrouillage optimiste)
+    description: Modifier un produit (If-Match facultatif pour le verrouillage optimiste).
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    - name: If-Match
+      in: header
+      schema:
+        type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              reference:
+                type: string
+              name:
+                type: string
+              description:
+                type:
+                - string
+                - 'null'
+              category_id:
+                type:
+                - string
+                - 'null'
+              product_type:
+                type: string
+                enum:
+                - stock
+                - service
+              base_unit_label:
+                type: string
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ProductEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+      '412':
+        $ref: ../components/responses.yaml#/Conflict
+  delete:
+    operationId: deleteProduct
+    tags:
+    - Catalogue
+    summary: Supprimer un produit sans historique (409 has_history sinon, CAT-006)
+    description: Supprimer un produit sans historique (409 has_history sinon, CAT-006).
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    responses:
+      '204':
+        description: Succès
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+products_id_archive:
+  post:
+    operationId: archiveProduct
+    tags:
+    - Catalogue
+    summary: Archiver un produit
+    description: Archiver un produit.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ProductEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+products_id_activate:
+  post:
+    operationId: activateProduct
+    tags:
+    - Catalogue
+    summary: Activer un produit
+    description: Activer un produit.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ProductEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+products_id_deactivate:
+  post:
+    operationId: deactivateProduct
+    tags:
+    - Catalogue
+    summary: Désactiver un produit
+    description: Désactiver un produit.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ProductEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+products_id_variants:
+  get:
+    operationId: listProductVariants
+    tags:
+    - Catalogue
+    summary: Variantes d'un produit
+    description: Variantes d'un produit.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ProductVariantList
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+  post:
+    operationId: createProductVariant
+    tags:
+    - Catalogue
+    summary: Ajouter une variante
+    description: Ajouter une variante.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              sku:
+                type: string
+              label:
+                type: string
+              attribute_value_ids:
+                type: array
+                items:
+                  $ref: ../components/schemas.yaml#/Ulid
+              pieces_per_carton:
+                type:
+                - integer
+                - 'null'
+              low_stock_threshold:
+                type:
+                - integer
+                - 'null'
+              barcode:
+                type:
+                - string
+                - 'null'
+              carton_barcode:
+                type:
+                - string
+                - 'null'
+            required:
+            - sku
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ProductVariantEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+products_id_images:
+  post:
+    operationId: uploadProductImage
+    tags:
+    - Catalogue
+    summary: Ajouter une photo (réencodée en WebP, métadonnées supprimées)
+    description: Ajouter une photo (réencodée en WebP, métadonnées supprimées).
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required:
+            - image
+            properties:
+              image:
+                type: string
+                format: binary
+              variant_id:
+                type: string
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ProductImageEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+product_images_id:
+  delete:
+    operationId: deleteProductImage
+    tags:
+    - Catalogue
+    summary: Supprimer une photo
+    description: Supprimer une photo.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    responses:
+      '204':
+        description: Succès
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+product_images_id_file:
+  get:
+    operationId: getProductImageFile
+    tags:
+    - Catalogue
+    summary: Photo
+    description: Photo.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    responses:
+      '200':
+        description: Image WebP
+        content:
+          image/webp:
+            schema:
+              type: string
+              format: binary
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+product_images_id_thumbnail:
+  get:
+    operationId: getProductImageThumbnail
+    tags:
+    - Catalogue
+    summary: Miniature (320 px)
+    description: Miniature (320 px).
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    responses:
+      '200':
+        description: Image WebP
+        content:
+          image/webp:
+            schema:
+              type: string
+              format: binary
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+product_variants_lookup:
+  get:
+    operationId: lookupBarcode
+    tags:
+    - Catalogue
+    summary: Résoudre un code-barres en variante et conditionnement
+    description: Résoudre un code-barres en variante et conditionnement.
+    parameters:
+    - name: barcode
+      in: query
+      required: true
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/BarcodeLookup
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+product_variants_id:
+  patch:
+    operationId: updateProductVariant
+    tags:
+    - Catalogue
+    summary: Modifier une variante
+    description: Modifier une variante.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              sku:
+                type: string
+              label:
+                type: string
+              status:
+                type: string
+                enum:
+                - active
+                - inactive
+              low_stock_threshold:
+                type:
+                - integer
+                - 'null'
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ProductVariantEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+product_variants_id_units:
+  get:
+    operationId: listVariantUnits
+    tags:
+    - Catalogue
+    summary: Conditionnements d'une variante
+    description: Conditionnements d'une variante.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/VariantUnitList
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+  post:
+    operationId: createVariantUnit
+    tags:
+    - Catalogue
+    summary: Ajouter un conditionnement
+    description: Ajouter un conditionnement.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+              label:
+                type: string
+              factor:
+                type: integer
+              barcode:
+                type:
+                - string
+                - 'null'
+              is_sellable:
+                type: boolean
+            required:
+            - code
+            - label
+            - factor
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/VariantUnitEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+variant_units_id:
+  patch:
+    operationId: updateVariantUnit
+    tags:
+    - Catalogue
+    summary: Modifier un conditionnement (facteur figé une fois utilisé)
+    description: Modifier un conditionnement (facteur figé une fois utilisé).
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              label:
+                type: string
+              factor:
+                type: integer
+              barcode:
+                type:
+                - string
+                - 'null'
+              is_sellable:
+                type: boolean
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/VariantUnitEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+product_variants_id_prices:
+  get:
+    operationId: listVariantPrices
+    tags:
+    - Catalogue
+    summary: Prix datés d'une variante
+    description: Prix datés d'une variante.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ProductPriceList
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+  post:
+    operationId: createVariantPrice
+    tags:
+    - Catalogue
+    summary: Ajouter un prix daté (sans chevauchement)
+    description: Ajouter un prix daté (sans chevauchement).
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              price_list_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              unit_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              price:
+                $ref: ../components/schemas.yaml#/Decimal
+              valid_from:
+                type: string
+                format: date
+              valid_to:
+                type:
+                - string
+                - 'null'
+                format: date
+            required:
+            - price_list_id
+            - unit_id
+            - price
+            - valid_from
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ProductPriceEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+price_lists:
+  get:
+    operationId: listPriceLists
+    tags:
+    - Catalogue
+    summary: Grilles tarifaires
+    description: Grilles tarifaires.
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PriceListList
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+  post:
+    operationId: createPriceList
+    tags:
+    - Catalogue
+    summary: Créer une grille tarifaire
+    description: Créer une grille tarifaire.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+              name:
+                type: string
+              currency:
+                $ref: ../components/schemas.yaml#/CurrencyCode
+            required:
+            - code
+            - name
+            - currency
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PriceListEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+price_lists_id:
+  patch:
+    operationId: updatePriceList
+    tags:
+    - Catalogue
+    summary: Renommer une grille ou la définir par défaut
+    description: Renommer une grille ou la définir par défaut.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+              is_default:
+                type: boolean
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PriceListEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+pricing_quote:
+  get:
+    operationId: quotePrice
+    tags:
+    - Catalogue
+    summary: Prix proposé (CAT-004)
+    description: Prix proposé (CAT-004).
+    parameters:
+    - name: variant_id
+      in: query
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - name: unit_id
+      in: query
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - name: price_list_id
+      in: query
+      schema:
+        type: string
+    - name: date
+      in: query
+      schema:
+        type: string
+        format: date
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PriceQuoteEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound

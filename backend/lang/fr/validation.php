@@ -1,0 +1,86 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+| Messages de validation en français (CDC : interface et messages en français).
+*/
+return [
+    'accepted' => 'Le champ :attribute doit être accepté.',
+    'alpha' => 'Le champ :attribute ne doit contenir que des lettres.',
+    'array' => 'Le champ :attribute doit être une liste.',
+    'between' => [
+        'numeric' => 'La valeur de :attribute doit être comprise entre :min et :max.',
+        'string' => 'Le texte :attribute doit contenir entre :min et :max caractères.',
+        'array' => 'La liste :attribute doit contenir entre :min et :max éléments.',
+    ],
+    'boolean' => 'Le champ :attribute doit être vrai ou faux.',
+    'confirmed' => 'La confirmation de :attribute ne correspond pas.',
+    'date' => 'Le champ :attribute n\'est pas une date valide.',
+    'date_format' => 'Le champ :attribute doit respecter le format :format.',
+    'decimal' => 'Le champ :attribute doit comporter :decimal décimales.',
+    'different' => 'Les champs :attribute et :other doivent être différents.',
+    'distinct' => 'Le champ :attribute contient une valeur en double.',
+    'email' => 'Le champ :attribute doit être une adresse e-mail valide.',
+    'enum' => 'La valeur de :attribute n\'est pas autorisée.',
+    'exists' => 'La valeur de :attribute n\'existe pas.',
+    'in' => 'La valeur de :attribute n\'est pas autorisée.',
+    'integer' => 'Le champ :attribute doit être un nombre entier.',
+    'max' => [
+        'numeric' => 'La valeur de :attribute ne peut pas dépasser :max.',
+        'string' => 'Le texte :attribute ne peut pas dépasser :max caractères.',
+        'array' => 'La liste :attribute ne peut pas contenir plus de :max éléments.',
+        'file' => 'Le fichier :attribute ne peut pas dépasser :max kilo-octets.',
+    ],
+    'min' => [
+        'numeric' => 'La valeur de :attribute doit être au moins :min.',
+        'string' => 'Le texte :attribute doit contenir au moins :min caractères.',
+        'array' => 'La liste :attribute doit contenir au moins :min éléments.',
+        'file' => 'Le fichier :attribute doit faire au moins :min kilo-octets.',
+    ],
+    'numeric' => 'Le champ :attribute doit être un nombre.',
+    'password' => [
+        'letters' => 'Le mot de passe doit contenir au moins une lettre.',
+        'mixed' => 'Le mot de passe doit contenir au moins une majuscule et une minuscule.',
+        'numbers' => 'Le mot de passe doit contenir au moins un chiffre.',
+        'symbols' => 'Le mot de passe doit contenir au moins un symbole.',
+        'uncompromised' => 'Ce mot de passe figure dans une fuite de données connue. Choisissez-en un autre.',
+    ],
+    'present' => 'Le champ :attribute doit être présent.',
+    'regex' => 'Le format du champ :attribute est invalide.',
+    'required' => 'Le champ :attribute est obligatoire.',
+    'same' => 'Les champs :attribute et :other doivent être identiques.',
+    'size' => [
+        'numeric' => 'La valeur de :attribute doit être :size.',
+        'string' => 'Le texte :attribute doit contenir :size caractères.',
+        'array' => 'La liste :attribute doit contenir :size éléments.',
+    ],
+    'string' => 'Le champ :attribute doit être un texte.',
+    'ulid' => 'Le champ :attribute doit être un identifiant valide.',
+    'unique' => 'Cette valeur de :attribute est déjà utilisée.',
+
+    'attributes' => [
+        'email' => 'adresse e-mail',
+        'password' => 'mot de passe',
+        'name' => 'nom',
+        'phone' => 'téléphone',
+        'code' => 'code',
+        'trade_name' => 'nom commercial',
+        'legal_name' => 'raison sociale',
+        'reference_currency' => 'devise de référence',
+        'admin_email' => 'e-mail de l\'administrateur',
+        'reason' => 'motif',
+        'role_id' => 'rôle',
+        'role_ids' => 'rôles',
+        'permissions' => 'permissions',
+        'theme' => 'thème',
+        'rate' => 'taux',
+        'valid_on' => 'date de validité',
+        'from_currency' => 'devise source',
+        'to_currency' => 'devise cible',
+        'country_code' => 'pays',
+        'city' => 'ville',
+        'address' => 'adresse',
+        'token' => 'jeton',
+    ],
+];

@@ -1,0 +1,32 @@
+IdempotencyKey:
+  name: Idempotency-Key
+  in: header
+  required: true
+  description: |
+    Clé unique générée par le client pour une intention (un clic « Valider »). Pendant 24 h, une même clé
+    rejoue la réponse initiale ; réutilisée avec un autre corps, elle provoque 409 idempotency_conflict.
+  schema:
+    type: string
+    pattern: '^[A-Za-z0-9_-]{16,64}$'
+
+Page:
+  name: page
+  in: query
+  schema: { type: integer, minimum: 1, default: 1 }
+
+PerPage:
+  name: per_page
+  in: query
+  schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+
+Search:
+  name: q
+  in: query
+  description: Recherche plein texte (nom, code, e-mail selon la ressource).
+  schema: { type: string, maxLength: 100 }
+
+Id:
+  name: id
+  in: path
+  required: true
+  schema: { $ref: './schemas.yaml#/Ulid' }

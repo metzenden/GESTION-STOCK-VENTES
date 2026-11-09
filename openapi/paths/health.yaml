@@ -1,0 +1,23 @@
+get:
+  operationId: getHealth
+  tags: [Supervision]
+  summary: Santé minimale de la plateforme
+  description: Indique si l'API et ses dépendances critiques (MySQL, Redis) répondent. Aucun détail interne n'est exposé.
+  security: []
+  responses:
+    '200':
+      description: Plateforme opérationnelle
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/HealthStatus'
+          example:
+            status: ok
+    '503':
+      description: Dépendance critique indisponible
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/HealthStatus'
+          example:
+            status: degraded

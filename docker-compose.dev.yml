@@ -1,0 +1,41 @@
+# Surcharges de développement : code monté, ports exposés en local uniquement, Mailpit, Vite.
+services:
+  app:
+    volumes:
+      - ./backend:/var/www/backend
+      - ./openapi:/var/www/openapi:ro   # contrat utilisé par les tests de conformité
+  queue:
+    volumes:
+      - ./backend:/var/www/backend
+  scheduler:
+    volumes:
+      - ./backend:/var/www/backend
+
+  nginx:
+    ports:
+      - "127.0.0.1:8080:80"
+
+  mysql:
+    ports:
+      - "127.0.0.1:3306:3306"
+
+  frontend:
+    image: node:22-alpine
+    # Même UID que l'hôte : node_modules et schema.d.ts restent modifiables hors conteneur.
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    working_dir: /app
+    command: ["sh", "-c", "npm ci && npm run dev -- --host 0.0.0.0"]
+    environment:
+      VITE_API_PROXY: http://nginx:80
+    volumes:
+      - ./frontend:/app
+      # Les scripts api:* lisent ../openapi/openapi.yaml depuis /app.
+      - ./openapi:/openapi:ro
+    ports:
+      - "127.0.0.1:5173:5173"
+    depends_on: [nginx]
+
+  mailpit:
+    image: axllent/mailpit:v1.21
+    ports:
+      - "127.0.0.1:8025:8025"

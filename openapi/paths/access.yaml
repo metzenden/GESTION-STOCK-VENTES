@@ -1,0 +1,262 @@
+users:
+  get:
+    operationId: listUsers
+    tags: [Utilisateurs]
+    summary: Utilisateurs de l'entreprise active
+    description: "Utilisateurs de l'entreprise active."
+    parameters:
+      - $ref: '../components/parameters.yaml#/Page'
+      - $ref: '../components/parameters.yaml#/PerPage'
+      - $ref: '../components/parameters.yaml#/Search'
+      - name: filter[status]
+        in: query
+        schema: { type: string, enum: [invited, active, disabled] }
+    responses:
+      '200':
+        description: Utilisateurs
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/UserList' }
+      '401': { $ref: '../components/responses.yaml#/Unauthenticated' }
+      '403': { $ref: '../components/responses.yaml#/Forbidden' }
+      '409': { $ref: '../components/responses.yaml#/Conflict' }
+user:
+  parameters:
+    - $ref: '../components/parameters.yaml#/Id'
+  get:
+    operationId: getUser
+    tags: [Utilisateurs]
+    summary: Consulter un utilisateur
+    description: "Consulter un utilisateur."
+    responses:
+      '200':
+        description: Utilisateur
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/UserEnvelope' }
+      '403': { $ref: '../components/responses.yaml#/Forbidden' }
+      '404': { $ref: '../components/responses.yaml#/NotFound' }
+  patch:
+    operationId: updateUser
+    tags: [Utilisateurs]
+    summary: Modifier nom, téléphone et rôles (ADM-005 protégé)
+    description: "Modifier nom, téléphone et rôles (ADM-005 protégé)."
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name: { type: string, minLength: 2, maxLength: 160 }
+              phone: { type: [string, 'null'], maxLength: 32 }
+              role_ids:
+                type: array
+                minItems: 1
+                maxItems: 10
+                items: { $ref: '../components/schemas.yaml#/Ulid' }
+    responses:
+      '200':
+        description: Utilisateur à jour
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/UserEnvelope' }
+      '403': { $ref: '../components/responses.yaml#/Forbidden' }
+      '404': { $ref: '../components/responses.yaml#/NotFound' }
+      '422': { $ref: '../components/responses.yaml#/ValidationFailed' }
+      '423': { $ref: '../components/responses.yaml#/CompanySuspended' }
+userDisable:
+  parameters:
+    - $ref: '../components/parameters.yaml#/Id'
+  post:
+    operationId: disableUser
+    tags: [Utilisateurs]
+    summary: Désactiver (révoque immédiatement toutes ses sessions, ADM-003)
+    description: "Désactiver (révoque immédiatement toutes ses sessions, ADM-003)."
+    responses:
+      '200':
+        description: Utilisateur désactivé
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/UserEnvelope' }
+      '403': { $ref: '../components/responses.yaml#/Forbidden' }
+      '404': { $ref: '../components/responses.yaml#/NotFound' }
+      '409': { $ref: '../components/responses.yaml#/Conflict' }
+      '422': { $ref: '../components/responses.yaml#/ValidationFailed' }
+      '423': { $ref: '../components/responses.yaml#/CompanySuspended' }
+userEnable:
+  parameters:
+    - $ref: '../components/parameters.yaml#/Id'
+  post:
+    operationId: enableUser
+    tags: [Utilisateurs]
+    summary: Réactiver un utilisateur
+    description: "Réactiver un utilisateur."
+    responses:
+      '200':
+        description: Utilisateur actif
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/UserEnvelope' }
+      '403': { $ref: '../components/responses.yaml#/Forbidden' }
+      '404': { $ref: '../components/responses.yaml#/NotFound' }
+      '409': { $ref: '../components/responses.yaml#/Conflict' }
+      '423': { $ref: '../components/responses.yaml#/CompanySuspended' }
+invitations:
+  get:
+    operationId: listInvitations
+    tags: [Utilisateurs]
+    summary: Invitations de l'entreprise active
+    description: "Invitations de l'entreprise active."
+    parameters:
+      - $ref: '../components/parameters.yaml#/Page'
+      - $ref: '../components/parameters.yaml#/PerPage'
+    responses:
+      '200':
+        description: Invitations
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/InvitationList' }
+      '403': { $ref: '../components/responses.yaml#/Forbidden' }
+  post:
+    operationId: inviteUser
+    tags: [Utilisateurs]
+    summary: Inviter un utilisateur (jeton 72 h envoyé par e-mail)
+    description: "Inviter un utilisateur (jeton 72 h envoyé par e-mail)."
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [email, role_id]
+            properties:
+              email: { type: string, format: email, maxLength: 190 }
+              role_id: { $ref: '../components/schemas.yaml#/Ulid' }
+    responses:
+      '201':
+        description: Invitation créée
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/InvitationEnvelope' }
+      '403': { $ref: '../components/responses.yaml#/Forbidden' }
+      '422': { $ref: '../components/responses.yaml#/ValidationFailed' }
+      '423': { $ref: '../components/responses.yaml#/CompanySuspended' }
+invitationRevoke:
+  parameters:
+    - $ref: '../components/parameters.yaml#/Id'
+  post:
+    operationId: revokeInvitation
+    tags: [Utilisateurs]
+    summary: Révoquer une invitation en attente
+    description: "Révoquer une invitation en attente."
+    responses:
+      '200':
+        description: Invitation révoquée
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/InvitationEnvelope' }
+      '403': { $ref: '../components/responses.yaml#/Forbidden' }
+      '404': { $ref: '../components/responses.yaml#/NotFound' }
+      '409': { $ref: '../components/responses.yaml#/Conflict' }
+roles:
+  get:
+    operationId: listRoles
+    tags: [Rôles]
+    summary: Rôles de l'entreprise active
+    description: "Rôles de l'entreprise active."
+    responses:
+      '200':
+        description: Rôles
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/RoleList' }
+      '403': { $ref: '../components/responses.yaml#/Forbidden' }
+  post:
+    operationId: createRole
+    tags: [Rôles]
+    summary: Créer un rôle (aucune permission platform.*, ADM-004)
+    description: "Créer un rôle (aucune permission platform.*, ADM-004)."
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [name, permissions]
+            properties:
+              name: { type: string, minLength: 2, maxLength: 64 }
+              permissions: { type: array, items: { type: string } }
+    responses:
+      '201':
+        description: Rôle créé
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/RoleEnvelope' }
+      '403': { $ref: '../components/responses.yaml#/Forbidden' }
+      '422': { $ref: '../components/responses.yaml#/ValidationFailed' }
+      '423': { $ref: '../components/responses.yaml#/CompanySuspended' }
+role:
+  parameters:
+    - $ref: '../components/parameters.yaml#/Id'
+  get:
+    operationId: getRole
+    tags: [Rôles]
+    summary: Consulter un rôle
+    description: "Consulter un rôle."
+    responses:
+      '200':
+        description: Rôle
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/RoleEnvelope' }
+      '403': { $ref: '../components/responses.yaml#/Forbidden' }
+      '404': { $ref: '../components/responses.yaml#/NotFound' }
+  patch:
+    operationId: updateRole
+    tags: [Rôles]
+    summary: Renommer un rôle ou modifier ses permissions (rôle Administrateur verrouillé)
+    description: "Renommer un rôle ou modifier ses permissions (rôle Administrateur verrouillé)."
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name: { type: string, minLength: 2, maxLength: 64 }
+              permissions: { type: array, items: { type: string } }
+    responses:
+      '200':
+        description: Rôle à jour
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/RoleEnvelope' }
+      '403': { $ref: '../components/responses.yaml#/Forbidden' }
+      '404': { $ref: '../components/responses.yaml#/NotFound' }
+      '409': { $ref: '../components/responses.yaml#/Conflict' }
+      '422': { $ref: '../components/responses.yaml#/ValidationFailed' }
+  delete:
+    operationId: deleteRole
+    tags: [Rôles]
+    summary: Supprimer un rôle personnalisé non attribué
+    description: "Supprimer un rôle personnalisé non attribué."
+    responses:
+      '204': { description: 'Rôle supprimé' }
+      '403': { $ref: '../components/responses.yaml#/Forbidden' }
+      '404': { $ref: '../components/responses.yaml#/NotFound' }
+      '409': { $ref: '../components/responses.yaml#/Conflict' }
+      '422': { $ref: '../components/responses.yaml#/ValidationFailed' }
+permissions:
+  get:
+    operationId: listPermissions
+    tags: [Rôles]
+    summary: Catalogue des permissions attribuables dans une entreprise
+    description: "Catalogue des permissions attribuables dans une entreprise."
+    responses:
+      '200':
+        description: Permissions
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/PermissionList' }
+      '403': { $ref: '../components/responses.yaml#/Forbidden' }

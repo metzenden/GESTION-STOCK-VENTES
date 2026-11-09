@@ -1,0 +1,487 @@
+openapi: 3.1.0
+info:
+  title: FDS Business API
+  version: 0.1.0
+  description: |
+    API REST de gestion commerciale multi-entreprises (docs/05-contrats-api.md).
+    Les montants sont transmis en chaînes décimales ; les erreurs suivent la RFC 9457.
+  contact:
+    name: FDS Business
+servers:
+  - url: /api/v1
+    description: Même origine que l'application (D-043)
+security:
+  - sessionCookie: []
+tags:
+  - name: Supervision
+    description: Santé de la plateforme
+  - name: Authentification
+    description: Connexion, session, mot de passe, invitation
+  - name: Plateforme
+    description: Administration des entreprises par le super-administrateur
+  - name: Utilisateurs
+    description: Utilisateurs et invitations de l'entreprise active
+  - name: Rôles
+    description: Rôles et permissions de l'entreprise active
+  - name: Paramètres
+    description: Identité, numérotation, taux de change, taxes
+  - name: Audit
+    description: Journal d'audit
+  - name: Catalogue
+    description: Catégories, produits, variantes, conditionnements, prix, photos
+  - name: Stocks
+    description: Dépôts, compartiments, lots, mouvements, ajustements, inventaires, transferts
+  - name: Achats
+    description: Fournisseurs, commandes d'achat, engagements fournisseurs
+  - name: Arrivages
+    description: Arrivages, conteneurs, packing lists, réceptions
+  - name: Coûts
+    description: Frais d'approche, modèles de formules, coûts de revient
+  - name: Ventes
+    description: Clients, devis, commandes, livraisons, retours, litiges, vente comptoir
+  - name: Facturation
+    description: Factures, avoirs, règlements, créances
+  - name: Trésorerie
+    description: Comptes financiers et mouvements
+  - name: Approbations
+    description: Règles, demandes, décisions, notifications
+  - name: Rapports
+    description: Tableau de bord, alertes, indicateurs, rapports, recherche, imports
+
+paths:
+  /health:
+    $ref: './paths/health.yaml'
+  /auth/login:
+    $ref: './paths/auth.yaml#/login'
+  /auth/logout:
+    $ref: './paths/auth.yaml#/logout'
+  /auth/me:
+    $ref: './paths/auth.yaml#/me'
+  /auth/me/preferences:
+    $ref: './paths/auth.yaml#/preferences'
+  /auth/forgot-password:
+    $ref: './paths/auth.yaml#/forgotPassword'
+  /auth/reset-password:
+    $ref: './paths/auth.yaml#/resetPassword'
+  /auth/accept-invitation:
+    $ref: './paths/auth.yaml#/acceptInvitation'
+  /context/company:
+    $ref: './paths/admin.yaml#/context'
+  /admin/companies:
+    $ref: './paths/admin.yaml#/companies'
+  /admin/companies/{id}:
+    $ref: './paths/admin.yaml#/company'
+  /admin/companies/{id}/suspend:
+    $ref: './paths/admin.yaml#/suspend'
+  /admin/companies/{id}/reactivate:
+    $ref: './paths/admin.yaml#/reactivate'
+  /admin/companies/{id}/invitations:
+    $ref: './paths/admin.yaml#/inviteAdmin'
+  /admin/audit-logs:
+    $ref: './paths/admin.yaml#/auditLogs'
+  /users:
+    $ref: './paths/access.yaml#/users'
+  /users/{id}:
+    $ref: './paths/access.yaml#/user'
+  /users/{id}/disable:
+    $ref: './paths/access.yaml#/userDisable'
+  /users/{id}/enable:
+    $ref: './paths/access.yaml#/userEnable'
+  /invitations:
+    $ref: './paths/access.yaml#/invitations'
+  /invitations/{id}/revoke:
+    $ref: './paths/access.yaml#/invitationRevoke'
+  /roles:
+    $ref: './paths/access.yaml#/roles'
+  /roles/{id}:
+    $ref: './paths/access.yaml#/role'
+  /permissions:
+    $ref: './paths/access.yaml#/permissions'
+  /settings/company:
+    $ref: './paths/settings.yaml#/company'
+  /settings/document-sequences:
+    $ref: './paths/settings.yaml#/sequences'
+  /exchange-rates:
+    $ref: './paths/settings.yaml#/exchangeRates'
+  /tax-rates:
+    $ref: './paths/settings.yaml#/taxRates'
+  /tax-rates/{id}:
+    $ref: './paths/settings.yaml#/taxRate'
+  /audit-logs:
+    $ref: './paths/settings.yaml#/auditLogs'
+  /categories:
+    $ref: './paths/catalog.yaml#/categories'
+  /categories/{id}:
+    $ref: './paths/catalog.yaml#/categories_id'
+  /attributes:
+    $ref: './paths/catalog.yaml#/attributes'
+  /attributes/{id}/values:
+    $ref: './paths/catalog.yaml#/attributes_id_values'
+  /products:
+    $ref: './paths/catalog.yaml#/products'
+  /products/{id}:
+    $ref: './paths/catalog.yaml#/products_id'
+  /products/{id}/archive:
+    $ref: './paths/catalog.yaml#/products_id_archive'
+  /products/{id}/activate:
+    $ref: './paths/catalog.yaml#/products_id_activate'
+  /products/{id}/deactivate:
+    $ref: './paths/catalog.yaml#/products_id_deactivate'
+  /products/{id}/variants:
+    $ref: './paths/catalog.yaml#/products_id_variants'
+  /products/{id}/images:
+    $ref: './paths/catalog.yaml#/products_id_images'
+  /product-images/{id}:
+    $ref: './paths/catalog.yaml#/product_images_id'
+  /product-images/{id}/file:
+    $ref: './paths/catalog.yaml#/product_images_id_file'
+  /product-images/{id}/thumbnail:
+    $ref: './paths/catalog.yaml#/product_images_id_thumbnail'
+  /product-variants/lookup:
+    $ref: './paths/catalog.yaml#/product_variants_lookup'
+  /product-variants/{id}:
+    $ref: './paths/catalog.yaml#/product_variants_id'
+  /product-variants/{id}/units:
+    $ref: './paths/catalog.yaml#/product_variants_id_units'
+  /variant-units/{id}:
+    $ref: './paths/catalog.yaml#/variant_units_id'
+  /product-variants/{id}/prices:
+    $ref: './paths/catalog.yaml#/product_variants_id_prices'
+  /price-lists:
+    $ref: './paths/catalog.yaml#/price_lists'
+  /price-lists/{id}:
+    $ref: './paths/catalog.yaml#/price_lists_id'
+  /pricing/quote:
+    $ref: './paths/catalog.yaml#/pricing_quote'
+  /warehouses:
+    $ref: './paths/stock.yaml#/warehouses'
+  /warehouses/{id}:
+    $ref: './paths/stock.yaml#/warehouses_id'
+  /stock/positions:
+    $ref: './paths/stock.yaml#/stock_positions'
+  /stock/lots:
+    $ref: './paths/stock.yaml#/stock_lots'
+  /stock/movements:
+    $ref: './paths/stock.yaml#/stock_movements'
+  /stock/valuation:
+    $ref: './paths/stock.yaml#/stock_valuation'
+  /stock-adjustments:
+    $ref: './paths/stock.yaml#/stock_adjustments'
+  /stock-adjustments/{id}:
+    $ref: './paths/stock.yaml#/stock_adjustments_id'
+  /stock-adjustments/{id}/submit:
+    $ref: './paths/stock.yaml#/stock_adjustments_id_submit'
+  /stock-adjustments/{id}/cancel:
+    $ref: './paths/stock.yaml#/stock_adjustments_id_cancel'
+  /inventories:
+    $ref: './paths/stock.yaml#/inventories'
+  /inventories/{id}:
+    $ref: './paths/stock.yaml#/inventories_id'
+  /inventories/{id}/start:
+    $ref: './paths/stock.yaml#/inventories_id_start'
+  /inventories/{id}/close-counting:
+    $ref: './paths/stock.yaml#/inventories_id_close_counting'
+  /inventories/{id}/reopen:
+    $ref: './paths/stock.yaml#/inventories_id_reopen'
+  /inventories/{id}/cancel:
+    $ref: './paths/stock.yaml#/inventories_id_cancel'
+  /inventories/{id}/validate:
+    $ref: './paths/stock.yaml#/inventories_id_validate'
+  /inventories/{id}/lines/{lineId}:
+    $ref: './paths/stock.yaml#/inventories_id_lines_lineId'
+  /inventories/{id}/sheet.pdf:
+    $ref: './paths/stock.yaml#/inventories_id_sheet_pdf'
+  /stock-transfers:
+    $ref: './paths/stock.yaml#/stock_transfers'
+  /stock-transfers/{id}:
+    $ref: './paths/stock.yaml#/stock_transfers_id'
+  /stock-transfers/{id}/confirm:
+    $ref: './paths/stock.yaml#/stock_transfers_id_confirm'
+  /stock-transfers/{id}/ship:
+    $ref: './paths/stock.yaml#/stock_transfers_id_ship'
+  /stock-transfers/{id}/receive:
+    $ref: './paths/stock.yaml#/stock_transfers_id_receive'
+  /stock-transfers/{id}/cancel:
+    $ref: './paths/stock.yaml#/stock_transfers_id_cancel'
+
+  /suppliers:
+    $ref: './paths/procurement.yaml#/suppliers'
+  /suppliers/{id}:
+    $ref: './paths/procurement.yaml#/suppliers_id'
+  /suppliers/{id}/statement:
+    $ref: './paths/procurement.yaml#/suppliers_id_statement'
+  /supplier-bills:
+    $ref: './paths/procurement.yaml#/supplier_bills'
+  /purchase-orders:
+    $ref: './paths/procurement.yaml#/purchase_orders'
+  /purchase-orders/{id}:
+    $ref: './paths/procurement.yaml#/purchase_orders_id'
+  /purchase-orders/{id}/confirm:
+    $ref: './paths/procurement.yaml#/purchase_orders_id_confirm'
+  /purchase-orders/{id}/close:
+    $ref: './paths/procurement.yaml#/purchase_orders_id_close'
+  /purchase-orders/{id}/cancel:
+    $ref: './paths/procurement.yaml#/purchase_orders_id_cancel'
+  /shipments:
+    $ref: './paths/logistics.yaml#/shipments'
+  /shipments/{shipment}:
+    $ref: './paths/logistics.yaml#/shipments_id'
+  /shipments/{shipment}/transition:
+    $ref: './paths/logistics.yaml#/shipments_id_transition'
+  /shipments/{shipment}/containers:
+    $ref: './paths/logistics.yaml#/shipments_id_containers'
+  /shipments/{shipment}/purchase-orders:
+    $ref: './paths/logistics.yaml#/shipments_id_purchase_orders'
+  /shipments/{shipment}/lines:
+    $ref: './paths/logistics.yaml#/shipments_id_lines'
+  /shipments/{shipment}/lines/{line}:
+    $ref: './paths/logistics.yaml#/shipments_id_lines_id'
+  /shipments/{shipment}/packing-lists:
+    $ref: './paths/logistics.yaml#/shipments_id_packing_lists'
+  /packing-lists/{list}:
+    $ref: './paths/logistics.yaml#/packing_lists_id'
+  /packing-lists/{list}/lines:
+    $ref: './paths/logistics.yaml#/packing_lists_id_lines'
+  /packing-lists/{list}/lines/{line}:
+    $ref: './paths/logistics.yaml#/packing_lists_id_lines_id'
+  /packing-lists/{list}/validate:
+    $ref: './paths/logistics.yaml#/packing_lists_id_validate'
+  /packing-lists/{list}/reject:
+    $ref: './paths/logistics.yaml#/packing_lists_id_reject'
+  /import-mapping-templates:
+    $ref: './paths/logistics.yaml#/import_mapping_templates'
+  /goods-receipts:
+    $ref: './paths/logistics.yaml#/goods_receipts'
+  /goods-receipts/{receipt}:
+    $ref: './paths/logistics.yaml#/goods_receipts_id'
+  /goods-receipts/{receipt}/start:
+    $ref: './paths/logistics.yaml#/goods_receipts_id_start'
+  /goods-receipts/{receipt}/lines/{line}:
+    $ref: './paths/logistics.yaml#/goods_receipts_id_lines_id'
+  /goods-receipts/{receipt}/scans:
+    $ref: './paths/logistics.yaml#/goods_receipts_id_scans'
+  /goods-receipts/{receipt}/validate:
+    $ref: './paths/logistics.yaml#/goods_receipts_id_validate'
+  /goods-receipts/{receipt}/cancel:
+    $ref: './paths/logistics.yaml#/goods_receipts_id_cancel'
+  /landed-cost-categories:
+    $ref: './paths/costing.yaml#/landed_cost_categories'
+  /shipments/{shipment}/costs:
+    $ref: './paths/costing.yaml#/shipments_id_costs'
+  /shipments/{shipment}/costs/{cost}:
+    $ref: './paths/costing.yaml#/shipments_id_costs_id'
+  /shipments/{shipment}/costs/{cost}/confirm:
+    $ref: './paths/costing.yaml#/shipments_id_costs_id_confirm'
+  /shipments/{shipment}/costs/{cost}/cancel:
+    $ref: './paths/costing.yaml#/shipments_id_costs_id_cancel'
+  /cost-models:
+    $ref: './paths/costing.yaml#/cost_models'
+  /cost-models/{model}/versions:
+    $ref: './paths/costing.yaml#/cost_models_id_versions'
+  /cost-models/{model}/test:
+    $ref: './paths/costing.yaml#/cost_models_id_test'
+  /cost-models/{model}/activate:
+    $ref: './paths/costing.yaml#/cost_models_id_activate'
+  /shipments/{shipment}/landed-costs:
+    $ref: './paths/costing.yaml#/shipments_id_landed_costs'
+  /landed-costs/{calculation}:
+    $ref: './paths/costing.yaml#/landed_costs_id'
+  /landed-costs/{calculation}/finalize:
+    $ref: './paths/costing.yaml#/landed_costs_id_finalize'
+
+  /customers:
+    $ref: './paths/sales.yaml#/customers'
+  /customers/{customer}:
+    $ref: './paths/sales.yaml#/customers_id'
+  /customers/{customer}/statement:
+    $ref: './paths/sales.yaml#/customers_id_statement'
+  /customers/{customer}/credits:
+    $ref: './paths/sales.yaml#/customers_id_credits'
+  /quotations:
+    $ref: './paths/sales.yaml#/quotations'
+  /quotations/{quotation}:
+    $ref: './paths/sales.yaml#/quotations_id'
+  /quotations/{quotation}/send:
+    $ref: './paths/sales.yaml#/quotations_id_send'
+  /quotations/{quotation}/accept:
+    $ref: './paths/sales.yaml#/quotations_id_accept'
+  /quotations/{quotation}/cancel:
+    $ref: './paths/sales.yaml#/quotations_id_cancel'
+  /quotations/{quotation}/convert:
+    $ref: './paths/sales.yaml#/quotations_id_convert'
+  /sales-orders:
+    $ref: './paths/sales.yaml#/sales_orders'
+  /sales-orders/{order}:
+    $ref: './paths/sales.yaml#/sales_orders_id'
+  /sales-orders/{order}/submit:
+    $ref: './paths/sales.yaml#/sales_orders_id_submit'
+  /sales-orders/{order}/cancel:
+    $ref: './paths/sales.yaml#/sales_orders_id_cancel'
+  /sales-orders/{order}/cancel-remaining:
+    $ref: './paths/sales.yaml#/sales_orders_id_cancel_remaining'
+  /sales-orders/{order}/disputes:
+    $ref: './paths/sales.yaml#/sales_orders_id_disputes'
+  /disputes/{dispute}/resolve:
+    $ref: './paths/sales.yaml#/disputes_id_resolve'
+  /counter-sales:
+    $ref: './paths/sales.yaml#/counter_sales'
+  /sales-orders/{order}/deliveries:
+    $ref: './paths/sales.yaml#/sales_orders_id_deliveries'
+  /deliveries:
+    $ref: './paths/sales.yaml#/deliveries'
+  /deliveries/{delivery}:
+    $ref: './paths/sales.yaml#/deliveries_id'
+  /deliveries/{delivery}/ready:
+    $ref: './paths/sales.yaml#/deliveries_id_ready'
+  /deliveries/{delivery}/ship:
+    $ref: './paths/sales.yaml#/deliveries_id_ship'
+  /deliveries/{delivery}/deliver:
+    $ref: './paths/sales.yaml#/deliveries_id_deliver'
+  /deliveries/{delivery}/fail:
+    $ref: './paths/sales.yaml#/deliveries_id_fail'
+  /deliveries/{delivery}/return-to-warehouse:
+    $ref: './paths/sales.yaml#/deliveries_id_return'
+  /deliveries/{delivery}/cancel:
+    $ref: './paths/sales.yaml#/deliveries_id_cancel'
+  /returns:
+    $ref: './paths/sales.yaml#/returns'
+  /returns/{return}:
+    $ref: './paths/sales.yaml#/returns_id'
+  /returns/{return}/receive:
+    $ref: './paths/sales.yaml#/returns_id_receive'
+  /returns/{return}/inspect:
+    $ref: './paths/sales.yaml#/returns_id_inspect'
+  /returns/{return}/close:
+    $ref: './paths/sales.yaml#/returns_id_close'
+  /returns/{return}/cancel:
+    $ref: './paths/sales.yaml#/returns_id_cancel'
+  /invoices:
+    $ref: './paths/sales.yaml#/invoices'
+  /invoices/{invoice}:
+    $ref: './paths/sales.yaml#/invoices_id'
+  /invoices/{invoice}/pdf:
+    $ref: './paths/sales.yaml#/invoices_id_pdf'
+  /invoices/{invoice}/share-link:
+    $ref: './paths/sales.yaml#/invoices_id_share_link'
+  /invoices/{invoice}/whatsapp-message:
+    $ref: './paths/sales.yaml#/invoices_id_whatsapp'
+  /invoices/{invoice}/payments:
+    $ref: './paths/sales.yaml#/invoices_id_payments'
+  /invoices/{invoice}/change-payment-method:
+    $ref: './paths/sales.yaml#/invoices_id_change_method'
+  /payments:
+    $ref: './paths/sales.yaml#/payments'
+  /payments/{payment}:
+    $ref: './paths/sales.yaml#/payments_id'
+  /payments/{payment}/receipt.pdf:
+    $ref: './paths/sales.yaml#/payments_id_receipt'
+  /payments/{payment}/reverse:
+    $ref: './paths/sales.yaml#/payments_id_reverse'
+  /receivables:
+    $ref: './paths/sales.yaml#/receivables'
+  /receivables/{invoice}/reminder:
+    $ref: './paths/sales.yaml#/receivables_id_reminder'
+  /credit-notes:
+    $ref: './paths/sales.yaml#/credit_notes'
+  /credit-notes/{note}:
+    $ref: './paths/sales.yaml#/credit_notes_id'
+  /credit-notes/{note}/issue:
+    $ref: './paths/sales.yaml#/credit_notes_id_issue'
+  /credit-notes/{note}/apply:
+    $ref: './paths/sales.yaml#/credit_notes_id_apply'
+  /credit-notes/{note}/pdf:
+    $ref: './paths/sales.yaml#/credit_notes_id_pdf'
+  /financial-accounts:
+    $ref: './paths/sales.yaml#/financial_accounts'
+  /financial-accounts/{account}:
+    $ref: './paths/sales.yaml#/financial_accounts_id'
+  /financial-accounts/{account}/movements:
+    $ref: './paths/sales.yaml#/financial_accounts_id_movements'
+  /public/companies/{company}/invoices/{invoice}.pdf:
+    $ref: './paths/sales.yaml#/public_invoice_pdf'
+
+  /account-transfers:
+    $ref: './paths/operations.yaml#/account_transfers'
+  /expense-categories:
+    $ref: './paths/operations.yaml#/expense_categories'
+  /expense-categories/{category}:
+    $ref: './paths/operations.yaml#/expense_categories_id'
+  /expenses:
+    $ref: './paths/operations.yaml#/expenses'
+  /expenses/{expense}/reverse:
+    $ref: './paths/operations.yaml#/expenses_id_reverse'
+  /financial-corrections:
+    $ref: './paths/operations.yaml#/financial_corrections'
+  /financial/pending:
+    $ref: './paths/operations.yaml#/financial_pending'
+  /opening:
+    $ref: './paths/operations.yaml#/opening'
+  /opening/post:
+    $ref: './paths/operations.yaml#/opening_post'
+  /approval-rules:
+    $ref: './paths/operations.yaml#/approval_rules'
+  /approval-rules/{rule}:
+    $ref: './paths/operations.yaml#/approval_rules_id'
+  /approvals:
+    $ref: './paths/operations.yaml#/approvals'
+  /approvals/{approval}:
+    $ref: './paths/operations.yaml#/approvals_id'
+  /approvals/{approval}/approve:
+    $ref: './paths/operations.yaml#/approvals_id_approve'
+  /approvals/{approval}/reject:
+    $ref: './paths/operations.yaml#/approvals_id_reject'
+  /approvals/{approval}/withdraw:
+    $ref: './paths/operations.yaml#/approvals_id_withdraw'
+  /notifications:
+    $ref: './paths/operations.yaml#/notifications'
+  /notifications/read-all:
+    $ref: './paths/operations.yaml#/notifications_read_all'
+  /notifications/{notification}/read:
+    $ref: './paths/operations.yaml#/notifications_id_read'
+  /reports/indicators:
+    $ref: './paths/operations.yaml#/reports_indicators'
+  /dashboard:
+    $ref: './paths/operations.yaml#/dashboard'
+  /alerts:
+    $ref: './paths/operations.yaml#/alerts'
+  /reports:
+    $ref: './paths/operations.yaml#/reports'
+  /reports/{report}:
+    $ref: './paths/operations.yaml#/reports_id'
+  /search:
+    $ref: './paths/operations.yaml#/search'
+  /admin/consolidated:
+    $ref: './paths/operations.yaml#/admin_consolidated'
+  /imports/{type}:
+    $ref: './paths/operations.yaml#/imports_type'
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: fds_session
+      description: Session Sanctum (cookie HttpOnly) ; en-tête X-XSRF-TOKEN requis sur les requêtes d'écriture.
+  parameters:
+    IdempotencyKey:
+      $ref: './components/parameters.yaml#/IdempotencyKey'
+  schemas:
+    Ulid:
+      $ref: './components/schemas.yaml#/Ulid'
+    Decimal:
+      $ref: './components/schemas.yaml#/Decimal'
+    CurrencyCode:
+      $ref: './components/schemas.yaml#/CurrencyCode'
+    Money:
+      $ref: './components/schemas.yaml#/Money'
+    PaginationMeta:
+      $ref: './components/schemas.yaml#/PaginationMeta'
+    Problem:
+      $ref: './components/schemas.yaml#/Problem'
+  responses:
+    Problem:
+      description: Erreur normalisée (RFC 9457)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'

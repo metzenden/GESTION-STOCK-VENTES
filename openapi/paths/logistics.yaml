@@ -1,0 +1,1244 @@
+shipments:
+  get:
+    operationId: listShipments
+    tags:
+    - Arrivages
+    summary: Arrivages
+    description: Arrivages.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    - name: filter[status]
+      in: query
+      schema:
+        type: string
+    - name: filter[q]
+      in: query
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ShipmentPage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: createShipment
+    tags:
+    - Arrivages
+    summary: Créer un arrivage
+    description: Créer un arrivage.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              reference:
+                type:
+                - string
+                - 'null'
+              carrier:
+                type:
+                - string
+                - 'null'
+              origin_country:
+                type:
+                - string
+                - 'null'
+              shipped_at:
+                type:
+                - string
+                - 'null'
+                format: date
+              eta:
+                type:
+                - string
+                - 'null'
+                format: date
+              default_warehouse_id:
+                type:
+                - string
+                - 'null'
+              notes:
+                type:
+                - string
+                - 'null'
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ShipmentEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+shipments_id:
+  get:
+    operationId: getShipment
+    tags:
+    - Arrivages
+    summary: Arrivage (conteneurs, commandes, articles attendus)
+    description: Arrivage (conteneurs, commandes, articles attendus).
+    parameters:
+    - name: shipment
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ShipmentEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  patch:
+    operationId: updateShipment
+    tags:
+    - Arrivages
+    summary: Modifier un arrivage
+    description: Modifier un arrivage.
+    parameters:
+    - name: shipment
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              reference:
+                type:
+                - string
+                - 'null'
+              carrier:
+                type:
+                - string
+                - 'null'
+              origin_country:
+                type:
+                - string
+                - 'null'
+              shipped_at:
+                type:
+                - string
+                - 'null'
+                format: date
+              eta:
+                type:
+                - string
+                - 'null'
+                format: date
+              default_warehouse_id:
+                type:
+                - string
+                - 'null'
+              notes:
+                type:
+                - string
+                - 'null'
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ShipmentEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+shipments_id_transition:
+  post:
+    operationId: transitionShipment
+    tags:
+    - Arrivages
+    summary: Changer l’état logistique
+    description: Changer l’état logistique.
+    parameters:
+    - name: shipment
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              to:
+                type: string
+                enum:
+                - shipped
+                - in_transit
+                - arrived
+                - received
+                - closed
+                - cancelled
+              date:
+                type:
+                - string
+                - 'null'
+                format: date
+            required:
+            - to
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ShipmentEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+shipments_id_containers:
+  get:
+    operationId: listContainers
+    tags:
+    - Arrivages
+    summary: Conteneurs
+    description: Conteneurs.
+    parameters:
+    - name: shipment
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ContainerList
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: createContainer
+    tags:
+    - Arrivages
+    summary: Ajouter un conteneur
+    description: Ajouter un conteneur.
+    parameters:
+    - name: shipment
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              container_number:
+                type: string
+              container_type:
+                type:
+                - string
+                - 'null'
+              seal_number:
+                type:
+                - string
+                - 'null'
+            required:
+            - container_number
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ContainerEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+shipments_id_purchase_orders:
+  post:
+    operationId: linkShipmentPurchaseOrder
+    tags:
+    - Arrivages
+    summary: Rattacher une commande (reliquats en articles attendus)
+    description: Rattacher une commande (reliquats en articles attendus).
+    parameters:
+    - name: shipment
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              purchase_order_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              with_lines:
+                type: boolean
+            required:
+            - purchase_order_id
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ShipmentEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+shipments_id_lines:
+  get:
+    operationId: listShipmentLines
+    tags:
+    - Arrivages
+    summary: Articles attendus
+    description: Articles attendus.
+    parameters:
+    - name: shipment
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ShipmentLineList
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: createShipmentLines
+    tags:
+    - Arrivages
+    summary: Ajouter des articles attendus
+    description: Ajouter des articles attendus.
+    parameters:
+    - name: shipment
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              lines:
+                type: array
+                minItems: 1
+                items:
+                  type: object
+                  properties:
+                    purchase_order_line_id:
+                      type:
+                      - string
+                      - 'null'
+                    variant_id:
+                      $ref: ../components/schemas.yaml#/Ulid
+                    supplier_id:
+                      type:
+                      - string
+                      - 'null'
+                    container_id:
+                      type:
+                      - string
+                      - 'null'
+                    destination_warehouse_id:
+                      $ref: ../components/schemas.yaml#/Ulid
+                    cartons:
+                      type:
+                      - integer
+                      - 'null'
+                    pieces_per_carton:
+                      type:
+                      - integer
+                      - 'null'
+                    qty_expected:
+                      type: integer
+                      minimum: 1
+                    cbm_total:
+                      type:
+                      - string
+                      - 'null'
+                    cbm_per_carton:
+                      type: string
+                      description: 'Converti en volume total : cbm_par_carton × cartons (CR-009)'
+                    purchase_currency:
+                      $ref: ../components/schemas.yaml#/CurrencyCode
+                    purchase_unit_price:
+                      $ref: ../components/schemas.yaml#/Decimal
+            required:
+            - lines
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ShipmentEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+shipments_id_lines_id:
+  patch:
+    operationId: updateShipmentLine
+    tags:
+    - Arrivages
+    summary: Modifier un article attendu
+    description: Modifier un article attendu.
+    parameters:
+    - name: shipment
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - name: line
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              purchase_order_line_id:
+                type:
+                - string
+                - 'null'
+              variant_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              supplier_id:
+                type:
+                - string
+                - 'null'
+              container_id:
+                type:
+                - string
+                - 'null'
+              destination_warehouse_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              cartons:
+                type:
+                - integer
+                - 'null'
+              pieces_per_carton:
+                type:
+                - integer
+                - 'null'
+              qty_expected:
+                type: integer
+                minimum: 1
+              cbm_total:
+                type:
+                - string
+                - 'null'
+              cbm_per_carton:
+                type: string
+                description: 'Converti en volume total : cbm_par_carton × cartons (CR-009)'
+              purchase_currency:
+                $ref: ../components/schemas.yaml#/CurrencyCode
+              purchase_unit_price:
+                $ref: ../components/schemas.yaml#/Decimal
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ShipmentLineEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+  delete:
+    operationId: deleteShipmentLine
+    tags:
+    - Arrivages
+    summary: Retirer un article attendu
+    description: Retirer un article attendu.
+    parameters:
+    - name: shipment
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - name: line
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '204':
+        description: Succès
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+shipments_id_packing_lists:
+  get:
+    operationId: listPackingLists
+    tags:
+    - Arrivages
+    summary: Packing lists de l’arrivage
+    description: Packing lists de l’arrivage.
+    parameters:
+    - name: shipment
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PackingListList
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: uploadPackingList
+    tags:
+    - Arrivages
+    summary: Téléverser une packing list (Excel ou CSV)
+    description: Téléverser une packing list (Excel ou CSV).
+    parameters:
+    - name: shipment
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              file:
+                type: string
+                format: binary
+              supplier_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              currency:
+                $ref: ../components/schemas.yaml#/CurrencyCode
+              mapping_template_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              mapping[header_row]:
+                type: integer
+            required:
+            - file
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PackingListEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+packing_lists_id:
+  get:
+    operationId: getPackingList
+    tags:
+    - Arrivages
+    summary: Résultat d’extraction
+    description: Résultat d’extraction.
+    parameters:
+    - name: list
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PackingListEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+packing_lists_id_lines:
+  get:
+    operationId: listPackingListLines
+    tags:
+    - Arrivages
+    summary: Lignes extraites
+    description: Lignes extraites.
+    parameters:
+    - name: list
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PackingListLineList
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+packing_lists_id_lines_id:
+  patch:
+    operationId: reviewPackingListLine
+    tags:
+    - Arrivages
+    summary: 'Revue d’une ligne : rattacher, créer le produit, corriger, écarter'
+    description: 'Revue d’une ligne : rattacher, créer le produit, corriger, écarter.'
+    parameters:
+    - name: list
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - name: line
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              action:
+                type: string
+                enum:
+                - confirm
+                - new_product
+                - ignore
+                - reset
+              variant_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              new_product:
+                type: object
+                properties:
+                  reference:
+                    type: string
+                  name:
+                    type: string
+              description:
+                type:
+                - string
+                - 'null'
+              cartons:
+                type:
+                - integer
+                - 'null'
+              pieces_per_carton:
+                type:
+                - integer
+                - 'null'
+              total_qty:
+                type:
+                - integer
+                - 'null'
+              cbm:
+                type:
+                - string
+                - 'null'
+              unit_price:
+                type:
+                - string
+                - 'null'
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PackingListLineEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+packing_lists_id_validate:
+  post:
+    operationId: validatePackingList
+    tags:
+    - Arrivages
+    summary: 'Valider : alimente les articles attendus (IMP-006)'
+    description: 'Valider : alimente les articles attendus (IMP-006).'
+    parameters:
+    - name: list
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PackingListEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+packing_lists_id_reject:
+  post:
+    operationId: rejectPackingList
+    tags:
+    - Arrivages
+    summary: Rejeter la packing list
+    description: Rejeter la packing list.
+    parameters:
+    - name: list
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/PackingListEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+import_mapping_templates:
+  get:
+    operationId: listImportMappingTemplates
+    tags:
+    - Arrivages
+    summary: Modèles de correspondance de colonnes
+    description: Modèles de correspondance de colonnes.
+    parameters:
+    - name: filter[import_type]
+      in: query
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/MappingTemplateList
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: createImportMappingTemplate
+    tags:
+    - Arrivages
+    summary: Enregistrer un modèle de correspondance
+    description: Enregistrer un modèle de correspondance.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              import_type:
+                type: string
+              supplier_id:
+                type:
+                - string
+                - 'null'
+              name:
+                type: string
+              file_format:
+                type: string
+                enum:
+                - xlsx
+                - csv
+              mapping:
+                type: object
+                properties:
+                  header_row:
+                    type: integer
+                  columns:
+                    type: object
+                    additionalProperties:
+                      type: string
+            required:
+            - import_type
+            - name
+            - file_format
+            - mapping
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/MappingTemplateEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+goods_receipts:
+  get:
+    operationId: listGoodsReceipts
+    tags:
+    - Arrivages
+    summary: Réceptions
+    description: Réceptions.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    - name: filter[status]
+      in: query
+      schema:
+        type: string
+    - name: filter[shipment_id]
+      in: query
+      schema:
+        type: string
+    - name: filter[purchase_order_id]
+      in: query
+      schema:
+        type: string
+    - name: filter[warehouse_id]
+      in: query
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GoodsReceiptPage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: createGoodsReceipt
+    tags:
+    - Arrivages
+    summary: Ouvrir une réception (arrivage ou commande directe)
+    description: Ouvrir une réception (arrivage ou commande directe).
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              shipment_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              purchase_order_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              warehouse_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              counting_mode:
+                type: string
+                enum:
+                - manual
+                - scan
+              note:
+                type:
+                - string
+                - 'null'
+            required:
+            - warehouse_id
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GoodsReceiptEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+goods_receipts_id:
+  get:
+    operationId: getGoodsReceipt
+    tags:
+    - Arrivages
+    summary: Réception
+    description: Réception.
+    parameters:
+    - name: receipt
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GoodsReceiptEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+goods_receipts_id_start:
+  post:
+    operationId: startGoodsReceipt
+    tags:
+    - Arrivages
+    summary: Commencer le comptage
+    description: Commencer le comptage.
+    parameters:
+    - name: receipt
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GoodsReceiptEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+goods_receipts_id_lines_id:
+  put:
+    operationId: countGoodsReceiptLine
+    tags:
+    - Arrivages
+    summary: Saisir les quantités acceptées et endommagées
+    description: Saisir les quantités acceptées et endommagées.
+    parameters:
+    - name: receipt
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - name: line
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              qty_accepted:
+                type: integer
+                minimum: 0
+              qty_damaged:
+                type: integer
+                minimum: 0
+              damaged_disposition:
+                type: string
+                enum:
+                - hold
+                - reject
+              note:
+                type:
+                - string
+                - 'null'
+            required:
+            - qty_accepted
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GoodsReceiptEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+goods_receipts_id_scans:
+  post:
+    operationId: scanGoodsReceipt
+    tags:
+    - Arrivages
+    summary: Événement de scan (dédoublonné par client_event_id, IMP-010)
+    description: Événement de scan (dédoublonné par client_event_id, IMP-010).
+    parameters:
+    - name: receipt
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              client_event_id:
+                type: string
+              code:
+                type: string
+              units:
+                type: integer
+                minimum: 1
+              damaged:
+                type: boolean
+              scanned_at:
+                type: string
+                format: date-time
+            required:
+            - client_event_id
+            - code
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ScanEventEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+      '200':
+        description: 'Rejeu : événement déjà reçu (meta.duplicate)'
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ScanEventEnvelope
+goods_receipts_id_validate:
+  post:
+    operationId: validateGoodsReceipt
+    tags:
+    - Arrivages
+    summary: 'Valider : lots, mouvements, blocages (une seule fois)'
+    description: 'Valider : lots, mouvements, blocages (une seule fois).'
+    parameters:
+    - name: receipt
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GoodsReceiptEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+goods_receipts_id_cancel:
+  post:
+    operationId: cancelGoodsReceipt
+    tags:
+    - Arrivages
+    summary: Annuler une réception non validée
+    description: Annuler une réception non validée.
+    parameters:
+    - name: receipt
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GoodsReceiptEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended

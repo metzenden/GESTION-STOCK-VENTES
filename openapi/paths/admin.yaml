@@ -1,0 +1,194 @@
+context:
+  post:
+    operationId: switchCompanyContext
+    tags: [Plateforme]
+    summary: Choisir l'entreprise active (super-admin, audité MT-008) ; null pour en sortir
+    description: "Choisir l'entreprise active (super-admin, audité MT-008) ; null pour en sortir."
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [company_id]
+            properties:
+              company_id: { type: [string, 'null'], minLength: 26, maxLength: 26 }
+    responses:
+      '200':
+        description: Entreprise active
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/ActiveCompany' }
+      '403': { $ref: '../components/responses.yaml#/Forbidden' }
+      '404': { $ref: '../components/responses.yaml#/NotFound' }
+companies:
+  get:
+    operationId: listCompanies
+    tags: [Plateforme]
+    summary: Lister les entreprises
+    description: "Lister les entreprises."
+    parameters:
+      - $ref: '../components/parameters.yaml#/Page'
+      - $ref: '../components/parameters.yaml#/PerPage'
+      - $ref: '../components/parameters.yaml#/Search'
+      - name: filter[status]
+        in: query
+        schema: { type: string, enum: [provisioning, active, suspended, archived] }
+    responses:
+      '200':
+        description: Entreprises
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/CompanyList' }
+      '403': { $ref: '../components/responses.yaml#/Forbidden' }
+  post:
+    operationId: createCompany
+    tags: [Plateforme]
+    summary: Créer une entreprise (atomique, ADM-001) et inviter son administrateur
+    description: "Créer une entreprise (atomique, ADM-001) et inviter son administrateur."
+    parameters:
+      - $ref: '../components/parameters.yaml#/IdempotencyKey'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../components/schemas.yaml#/CompanyIdentity'
+              - type: object
+                required: [code, trade_name, reference_currency, admin_email]
+                properties:
+                  code: { type: string, pattern: '^[A-Z0-9_-]+$', maxLength: 32 }
+                  reference_currency: { $ref: '../components/schemas.yaml#/CurrencyCode' }
+                  admin_email: { type: string, format: email }
+    responses:
+      '201':
+        description: Entreprise créée et active ; invitation envoyée après validation
+        headers:
+          Location: { schema: { type: string } }
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/CompanyEnvelope' }
+      '403': { $ref: '../components/responses.yaml#/Forbidden' }
+      '409': { $ref: '../components/responses.yaml#/Conflict' }
+      '422': { $ref: '../components/responses.yaml#/ValidationFailed' }
+company:
+  parameters:
+    - $ref: '../components/parameters.yaml#/Id'
+  get:
+    operationId: getCompany
+    tags: [Plateforme]
+    summary: Consulter une entreprise
+    description: "Consulter une entreprise."
+    responses:
+      '200':
+        description: Entreprise
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/CompanyEnvelope' }
+      '403': { $ref: '../components/responses.yaml#/Forbidden' }
+      '404': { $ref: '../components/responses.yaml#/NotFound' }
+  patch:
+    operationId: updateCompany
+    tags: [Plateforme]
+    summary: Modifier l'identité d'une entreprise
+    description: "Modifier l'identité d'une entreprise."
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: '../components/schemas.yaml#/CompanyIdentity' }
+    responses:
+      '200':
+        description: Entreprise à jour
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/CompanyEnvelope' }
+      '403': { $ref: '../components/responses.yaml#/Forbidden' }
+      '404': { $ref: '../components/responses.yaml#/NotFound' }
+      '422': { $ref: '../components/responses.yaml#/ValidationFailed' }
+suspend:
+  parameters:
+    - $ref: '../components/parameters.yaml#/Id'
+  post:
+    operationId: suspendCompany
+    tags: [Plateforme]
+    summary: Suspendre (lecture seule pour tous, D-041)
+    description: "Suspendre (lecture seule pour tous, D-041)."
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [reason]
+            properties:
+              reason: { type: string, minLength: 3, maxLength: 255 }
+    responses:
+      '200':
+        description: Entreprise suspendue
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/CompanyEnvelope' }
+      '403': { $ref: '../components/responses.yaml#/Forbidden' }
+      '404': { $ref: '../components/responses.yaml#/NotFound' }
+      '409': { $ref: '../components/responses.yaml#/Conflict' }
+reactivate:
+  parameters:
+    - $ref: '../components/parameters.yaml#/Id'
+  post:
+    operationId: reactivateCompany
+    tags: [Plateforme]
+    summary: Réactiver une entreprise suspendue
+    description: "Réactiver une entreprise suspendue."
+    responses:
+      '200':
+        description: Entreprise active
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/CompanyEnvelope' }
+      '403': { $ref: '../components/responses.yaml#/Forbidden' }
+      '404': { $ref: '../components/responses.yaml#/NotFound' }
+      '409': { $ref: '../components/responses.yaml#/Conflict' }
+inviteAdmin:
+  parameters:
+    - $ref: '../components/parameters.yaml#/Id'
+  post:
+    operationId: inviteCompanyAdmin
+    tags: [Plateforme]
+    summary: Inviter un administrateur dans l'entreprise
+    description: "Inviter un administrateur dans l'entreprise."
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [email]
+            properties:
+              email: { type: string, format: email }
+    responses:
+      '204': { description: 'Invitation envoyée' }
+      '403': { $ref: '../components/responses.yaml#/Forbidden' }
+      '404': { $ref: '../components/responses.yaml#/NotFound' }
+      '422': { $ref: '../components/responses.yaml#/ValidationFailed' }
+auditLogs:
+  get:
+    operationId: listPlatformAuditLogs
+    tags: [Plateforme]
+    summary: Journal d'audit global
+    description: "Journal d'audit global."
+    parameters:
+      - $ref: '../components/parameters.yaml#/Page'
+      - $ref: '../components/parameters.yaml#/PerPage'
+      - { name: 'filter[company_id]', in: query, schema: { type: string } }
+      - { name: 'filter[action]', in: query, schema: { type: string } }
+      - { name: 'filter[user_id]', in: query, schema: { type: string } }
+      - { name: 'filter[subject_id]', in: query, schema: { type: string } }
+    responses:
+      '200':
+        description: Entrées du journal
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/AuditLogList' }
+      '403': { $ref: '../components/responses.yaml#/Forbidden' }

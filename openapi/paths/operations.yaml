@@ -1,0 +1,1122 @@
+account_transfers:
+  get:
+    operationId: listAccountTransfers
+    tags:
+    - Trésorerie
+    summary: Transferts entre comptes
+    description: Transferts entre comptes.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericPage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: createAccountTransfer
+    tags:
+    - Trésorerie
+    summary: Transfert entre comptes (taux si devises différentes)
+    description: Transfert entre comptes (taux si devises différentes).
+    parameters:
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              from_account_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              to_account_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              amount:
+                $ref: ../components/schemas.yaml#/Decimal
+              exchange_rate:
+                type:
+                - string
+                - 'null'
+              description:
+                type:
+                - string
+                - 'null'
+            required:
+            - from_account_id
+            - to_account_id
+            - amount
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+expense_categories:
+  get:
+    operationId: listExpenseCategories
+    tags:
+    - Trésorerie
+    summary: Catégories de dépenses
+    description: Catégories de dépenses.
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericList
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: createExpenseCategory
+    tags:
+    - Trésorerie
+    summary: Créer une catégorie
+    description: Créer une catégorie.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+            required:
+            - name
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+expense_categories_id:
+  patch:
+    operationId: updateExpenseCategory
+    tags:
+    - Trésorerie
+    summary: Modifier une catégorie
+    description: Modifier une catégorie.
+    parameters:
+    - name: category
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+              is_active:
+                type: boolean
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+expenses:
+  get:
+    operationId: listExpenses
+    tags:
+    - Trésorerie
+    summary: Dépenses
+    description: Dépenses.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    - name: filter[category_id]
+      in: query
+      schema:
+        type: string
+    - name: filter[from]
+      in: query
+      schema:
+        type: string
+        format: date
+    - name: filter[to]
+      in: query
+      schema:
+        type: string
+        format: date
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericPage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: createExpense
+    tags:
+    - Trésorerie
+    summary: Enregistrer une dépense (justificatif facultatif)
+    description: Enregistrer une dépense (justificatif facultatif).
+    parameters:
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              category_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              financial_account_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              expense_date:
+                type: string
+                format: date
+              label:
+                type: string
+              amount:
+                $ref: ../components/schemas.yaml#/Decimal
+              attachment:
+                type: string
+                format: binary
+            required:
+            - category_id
+            - financial_account_id
+            - expense_date
+            - label
+            - amount
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+expenses_id_reverse:
+  post:
+    operationId: reverseExpense
+    tags:
+    - Trésorerie
+    summary: Contre-passer une dépense
+    description: Contre-passer une dépense.
+    parameters:
+    - name: expense
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              reason:
+                type: string
+            required:
+            - reason
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+financial_corrections:
+  get:
+    operationId: listFinancialCorrections
+    tags:
+    - Trésorerie
+    summary: Corrections financières
+    description: Corrections financières.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericPage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: createFinancialCorrection
+    tags:
+    - Trésorerie
+    summary: Correction financière (approbation éventuelle)
+    description: Correction financière (approbation éventuelle).
+    parameters:
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              financial_account_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              direction:
+                type: string
+                enum:
+                - in
+                - out
+              amount:
+                $ref: ../components/schemas.yaml#/Decimal
+              reason:
+                type: string
+            required:
+            - financial_account_id
+            - direction
+            - amount
+            - reason
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+financial_pending:
+  get:
+    operationId: getFinancialPending
+    tags:
+    - Trésorerie
+    summary: Rubrique « En attente » (aucun mouvement avant approbation)
+    description: Rubrique « En attente » (aucun mouvement avant approbation).
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+opening:
+  get:
+    operationId: getOpening
+    tags:
+    - Trésorerie
+    summary: Document d’ouverture
+    description: Document d’ouverture.
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericNullableEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  put:
+    operationId: saveOpening
+    tags:
+    - Trésorerie
+    summary: Enregistrer le document d’ouverture (brouillon)
+    description: Enregistrer le document d’ouverture (brouillon).
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              start_date:
+                type: string
+                format: date
+              accounts:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    account_id:
+                      $ref: ../components/schemas.yaml#/Ulid
+                    amount:
+                      $ref: ../components/schemas.yaml#/Decimal
+                  required:
+                  - account_id
+                  - amount
+              stock:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    warehouse_id:
+                      $ref: ../components/schemas.yaml#/Ulid
+                    variant_id:
+                      $ref: ../components/schemas.yaml#/Ulid
+                    quantity:
+                      type: integer
+                    unit_cost:
+                      $ref: ../components/schemas.yaml#/Decimal
+                  required:
+                  - warehouse_id
+                  - variant_id
+                  - quantity
+                  - unit_cost
+            required:
+            - start_date
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+opening_post:
+  post:
+    operationId: postOpening
+    tags:
+    - Trésorerie
+    summary: Comptabiliser l’ouverture (une seule fois)
+    description: Comptabiliser l’ouverture (une seule fois).
+    parameters:
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+approval_rules:
+  get:
+    operationId: listApprovalRules
+    tags:
+    - Approbations
+    summary: Règles d’approbation
+    description: Règles d’approbation.
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericList
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+  post:
+    operationId: createApprovalRule
+    tags:
+    - Approbations
+    summary: Créer une règle
+    description: Créer une règle.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+              operation:
+                type: string
+                enum:
+                - discount
+                - price_override
+                - cancellation
+                - stock_adjustment
+                - credit_note
+                - financial_correction
+              role_id:
+                type:
+                - string
+                - 'null'
+              threshold_type:
+                type: string
+                enum:
+                - always
+                - amount
+                - percent
+                - quantity
+              threshold_value:
+                type:
+                - string
+                - 'null'
+              approver_permission:
+                type: string
+              priority:
+                type: integer
+              is_active:
+                type: boolean
+            required:
+            - name
+            - operation
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+approval_rules_id:
+  patch:
+    operationId: updateApprovalRule
+    tags:
+    - Approbations
+    summary: Modifier une règle
+    description: Modifier une règle.
+    parameters:
+    - name: rule
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              is_active:
+                type: boolean
+              threshold_value:
+                type:
+                - string
+                - 'null'
+              priority:
+                type: integer
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+approvals:
+  get:
+    operationId: listApprovals
+    tags:
+    - Approbations
+    summary: Demandes d’approbation
+    description: Demandes d’approbation.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    - name: filter[status]
+      in: query
+      schema:
+        type: string
+    - name: filter[mine]
+      in: query
+      schema:
+        type: boolean
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericPage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+approvals_id:
+  get:
+    operationId: getApproval
+    tags:
+    - Approbations
+    summary: Demande d’approbation
+    description: Demande d’approbation.
+    parameters:
+    - name: approval
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+approvals_id_approve:
+  post:
+    operationId: approveRequest
+    tags:
+    - Approbations
+    summary: 'Approuver : exécution atomique (une seule fois)'
+    description: 'Approuver : exécution atomique (une seule fois).'
+    parameters:
+    - name: approval
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              comment:
+                type:
+                - string
+                - 'null'
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+approvals_id_reject:
+  post:
+    operationId: rejectRequest
+    tags:
+    - Approbations
+    summary: 'Rejeter : effets provisoires levés'
+    description: 'Rejeter : effets provisoires levés.'
+    parameters:
+    - name: approval
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              comment:
+                type:
+                - string
+                - 'null'
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+approvals_id_withdraw:
+  post:
+    operationId: withdrawRequest
+    tags:
+    - Approbations
+    summary: Retirer sa demande
+    description: Retirer sa demande.
+    parameters:
+    - name: approval
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+notifications:
+  get:
+    operationId: listNotifications
+    tags:
+    - Approbations
+    summary: Notifications (meta.unread)
+    description: Notifications (meta.unread).
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericPage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+notifications_read_all:
+  post:
+    operationId: readAllNotifications
+    tags:
+    - Approbations
+    summary: Tout marquer comme lu
+    description: Tout marquer comme lu.
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+notifications_id_read:
+  post:
+    operationId: readNotification
+    tags:
+    - Approbations
+    summary: Marquer comme lue
+    description: Marquer comme lue.
+    parameters:
+    - name: notification
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+reports_indicators:
+  get:
+    operationId: getIndicators
+    tags:
+    - Rapports
+    summary: Indicateurs de gestion (CA net, CMV, marge, charges, résultat)
+    description: Indicateurs de gestion (CA net, CMV, marge, charges, résultat).
+    parameters:
+    - name: from
+      in: query
+      schema:
+        type: string
+        format: date
+    - name: to
+      in: query
+      schema:
+        type: string
+        format: date
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+dashboard:
+  get:
+    operationId: getDashboard
+    tags:
+    - Rapports
+    summary: Tableau de bord
+    description: Tableau de bord.
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+alerts:
+  get:
+    operationId: getAlerts
+    tags:
+    - Rapports
+    summary: Alertes
+    description: Alertes.
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericList
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+reports:
+  get:
+    operationId: listReports
+    tags:
+    - Rapports
+    summary: Rapports accessibles
+    description: Rapports accessibles.
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericList
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+reports_id:
+  get:
+    operationId: getReport
+    tags:
+    - Rapports
+    summary: Rapport (JSON ou CSV)
+    description: Rapport (JSON ou CSV).
+    parameters:
+    - name: report
+      in: path
+      required: true
+      schema:
+        type: string
+    - name: from
+      in: query
+      schema:
+        type: string
+        format: date
+    - name: to
+      in: query
+      schema:
+        type: string
+        format: date
+    - name: format
+      in: query
+      schema:
+        type: string
+        enum:
+        - json
+        - csv
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericList
+          text/csv:
+            schema:
+              type: string
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+search:
+  get:
+    operationId: globalSearch
+    tags:
+    - Rapports
+    summary: Recherche globale
+    description: Recherche globale.
+    parameters:
+    - name: q
+      in: query
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericList
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+admin_consolidated:
+  get:
+    operationId: getConsolidated
+    tags:
+    - Plateforme
+    summary: Vue consolidée par devise (super-administrateur)
+    description: Vue consolidée par devise (super-administrateur).
+    parameters:
+    - name: from
+      in: query
+      schema:
+        type: string
+        format: date
+    - name: to
+      in: query
+      schema:
+        type: string
+        format: date
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+imports_type:
+  post:
+    operationId: runImport
+    tags:
+    - Rapports
+    summary: Import initial (simulation par défaut, tout ou rien)
+    description: Import initial (simulation par défaut, tout ou rien).
+    parameters:
+    - name: type
+      in: path
+      required: true
+      schema:
+        type: string
+        enum:
+        - products
+        - customers
+        - suppliers
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              file:
+                type: string
+                format: binary
+              simulate:
+                type: boolean
+            required:
+            - file
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/GenericEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended

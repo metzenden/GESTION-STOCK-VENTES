@@ -1,0 +1,1051 @@
+warehouses:
+  get:
+    operationId: listWarehouses
+    tags:
+    - Stocks
+    summary: Dépôts
+    description: Dépôts.
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/WarehouseList
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+  post:
+    operationId: createWarehouse
+    tags:
+    - Stocks
+    summary: Créer un dépôt
+    description: Créer un dépôt.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+              name:
+                type: string
+              address:
+                type:
+                - string
+                - 'null'
+              is_default:
+                type: boolean
+            required:
+            - code
+            - name
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/WarehouseEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+warehouses_id:
+  patch:
+    operationId: updateWarehouse
+    tags:
+    - Stocks
+    summary: Modifier, désactiver un dépôt ou le définir par défaut
+    description: Modifier, désactiver un dépôt ou le définir par défaut.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+              address:
+                type:
+                - string
+                - 'null'
+              status:
+                type: string
+                enum:
+                - active
+                - inactive
+              is_default:
+                type: boolean
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/WarehouseEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+stock_positions:
+  get:
+    operationId: listStockPositions
+    tags:
+    - Stocks
+    summary: Compartiments par dépôt et variante
+    description: Compartiments par dépôt et variante.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    - name: filter[warehouse_id]
+      in: query
+      schema:
+        type: string
+    - name: filter[variant_id]
+      in: query
+      schema:
+        type: string
+    - name: filter[low]
+      in: query
+      schema:
+        type: boolean
+    - $ref: ../components/parameters.yaml#/Search
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/StockPositionPage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+stock_lots:
+  get:
+    operationId: listStockLots
+    tags:
+    - Stocks
+    summary: Lots et soldes par dépôt (coûts sensibles)
+    description: Lots et soldes par dépôt (coûts sensibles).
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    - name: filter[variant_id]
+      in: query
+      schema:
+        type: string
+    - name: filter[warehouse_id]
+      in: query
+      schema:
+        type: string
+    - name: filter[with_empty]
+      in: query
+      schema:
+        type: boolean
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/StockLotPage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+stock_movements:
+  get:
+    operationId: listStockMovements
+    tags:
+    - Stocks
+    summary: Historique des mouvements
+    description: Historique des mouvements.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    - name: filter[warehouse_id]
+      in: query
+      schema:
+        type: string
+    - name: filter[variant_id]
+      in: query
+      schema:
+        type: string
+    - name: filter[lot_id]
+      in: query
+      schema:
+        type: string
+    - name: filter[movement_type]
+      in: query
+      schema:
+        type: string
+    - name: filter[date_from]
+      in: query
+      schema:
+        type: string
+        format: date
+    - name: filter[date_to]
+      in: query
+      schema:
+        type: string
+        format: date
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/StockMovementPage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+stock_valuation:
+  get:
+    operationId: getStockValuation
+    tags:
+    - Stocks
+    summary: Valeur du stock au coût des lots (permission sensible)
+    description: Valeur du stock au coût des lots (permission sensible).
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/StockValuation
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+stock_adjustments:
+  get:
+    operationId: listStockAdjustments
+    tags:
+    - Stocks
+    summary: Ajustements de stock
+    description: Ajustements de stock.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    - name: filter[status]
+      in: query
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/StockAdjustmentPage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+  post:
+    operationId: createStockAdjustment
+    tags:
+    - Stocks
+    summary: Créer un ajustement (brouillon)
+    description: Créer un ajustement (brouillon).
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              warehouse_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              reason:
+                type:
+                - string
+                - 'null'
+              lines:
+                type: array
+                items:
+                  type: object
+                  required:
+                  - variant_id
+                  - quantity
+                  properties:
+                    variant_id:
+                      $ref: ../components/schemas.yaml#/Ulid
+                    lot_id:
+                      type:
+                      - string
+                      - 'null'
+                    quantity:
+                      type: integer
+                    kind:
+                      type: string
+                      enum:
+                      - gain
+                      - loss
+                      - damage
+                      - correction
+                    unit_cost:
+                      type:
+                      - string
+                      - 'null'
+            required:
+            - warehouse_id
+            - lines
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/StockAdjustmentEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+stock_adjustments_id:
+  get:
+    operationId: getStockAdjustment
+    tags:
+    - Stocks
+    summary: Consulter un ajustement
+    description: Consulter un ajustement.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/StockAdjustmentEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+  patch:
+    operationId: updateStockAdjustment
+    tags:
+    - Stocks
+    summary: Modifier un brouillon
+    description: Modifier un brouillon.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    - name: If-Match
+      in: header
+      schema:
+        type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              reason:
+                type:
+                - string
+                - 'null'
+              lines:
+                type: array
+                items:
+                  type: object
+                  required:
+                  - variant_id
+                  - quantity
+                  properties:
+                    variant_id:
+                      $ref: ../components/schemas.yaml#/Ulid
+                    lot_id:
+                      type:
+                      - string
+                      - 'null'
+                    quantity:
+                      type: integer
+                    kind:
+                      type: string
+                      enum:
+                      - gain
+                      - loss
+                      - damage
+                      - correction
+                    unit_cost:
+                      type:
+                      - string
+                      - 'null'
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/StockAdjustmentEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+      '412':
+        $ref: ../components/responses.yaml#/Conflict
+stock_adjustments_id_submit:
+  post:
+    operationId: submitStockAdjustment
+    tags:
+    - Stocks
+    summary: Comptabiliser, ou demander l'approbation (202)
+    description: Comptabiliser, ou demander l'approbation (202).
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/StockAdjustmentEnvelope
+      '202':
+        description: 'Approbation requise : sorties bloquées provisoirement'
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/StockAdjustmentEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+stock_adjustments_id_cancel:
+  post:
+    operationId: cancelStockAdjustment
+    tags:
+    - Stocks
+    summary: Annuler un brouillon
+    description: Annuler un brouillon.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/StockAdjustmentEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+inventories:
+  get:
+    operationId: listInventories
+    tags:
+    - Stocks
+    summary: Inventaires
+    description: Inventaires.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    - name: filter[status]
+      in: query
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/InventoryPage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+  post:
+    operationId: createInventory
+    tags:
+    - Stocks
+    summary: Créer un inventaire (complet ou partiel)
+    description: Créer un inventaire (complet ou partiel).
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              warehouse_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              variant_ids:
+                type: array
+                items:
+                  $ref: ../components/schemas.yaml#/Ulid
+              note:
+                type:
+                - string
+                - 'null'
+            required:
+            - warehouse_id
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/InventoryEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+inventories_id:
+  get:
+    operationId: getInventory
+    tags:
+    - Stocks
+    summary: Consulter un inventaire et ses écarts
+    description: Consulter un inventaire et ses écarts.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/InventoryEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+inventories_id_start:
+  post:
+    operationId: startInventory
+    tags:
+    - Stocks
+    summary: Démarrer le comptage (figeage)
+    description: Démarrer le comptage (figeage).
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/InventoryEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+inventories_id_close_counting:
+  post:
+    operationId: closeCountingInventory
+    tags:
+    - Stocks
+    summary: Clôturer le comptage
+    description: Clôturer le comptage.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/InventoryEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+inventories_id_reopen:
+  post:
+    operationId: reopenInventory
+    tags:
+    - Stocks
+    summary: Rouvrir le comptage
+    description: Rouvrir le comptage.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/InventoryEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+inventories_id_cancel:
+  post:
+    operationId: cancelInventory
+    tags:
+    - Stocks
+    summary: Annuler l'inventaire
+    description: Annuler l'inventaire.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/InventoryEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+inventories_id_validate:
+  post:
+    operationId: validateInventory
+    tags:
+    - Stocks
+    summary: 'Valider : crée l''ajustement des écarts'
+    description: 'Valider : crée l''ajustement des écarts.'
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              reason:
+                type:
+                - string
+                - 'null'
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/InventoryEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+inventories_id_lines_lineId:
+  put:
+    operationId: countInventoryLine
+    tags:
+    - Stocks
+    summary: Saisir le comptage d'une ligne
+    description: Saisir le comptage d'une ligne.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    - name: lineId
+      in: path
+      required: true
+      schema:
+        $ref: ../components/schemas.yaml#/Ulid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              qty_counted:
+                type: integer
+              note:
+                type:
+                - string
+                - 'null'
+            required:
+            - qty_counted
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/InventoryEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+inventories_id_sheet_pdf:
+  get:
+    operationId: getInventorySheet
+    tags:
+    - Stocks
+    summary: Feuille de comptage A4 (PDF)
+    description: Feuille de comptage A4 (PDF), sans les quantités théoriques.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    responses:
+      '200':
+        description: PDF
+        content:
+          application/pdf:
+            schema:
+              type: string
+              format: binary
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+stock_transfers:
+  get:
+    operationId: listStockTransfers
+    tags:
+    - Stocks
+    summary: Transferts entre dépôts
+    description: Transferts entre dépôts.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Page
+    - $ref: ../components/parameters.yaml#/PerPage
+    - name: filter[status]
+      in: query
+      schema:
+        type: string
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/StockTransferPage
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+  post:
+    operationId: createStockTransfer
+    tags:
+    - Stocks
+    summary: Créer un transfert (brouillon)
+    description: Créer un transfert (brouillon).
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              from_warehouse_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              to_warehouse_id:
+                $ref: ../components/schemas.yaml#/Ulid
+              note:
+                type:
+                - string
+                - 'null'
+              lines:
+                type: array
+                items:
+                  type: object
+                  required:
+                  - variant_id
+                  - quantity
+                  properties:
+                    variant_id:
+                      $ref: ../components/schemas.yaml#/Ulid
+                    quantity:
+                      type: integer
+            required:
+            - from_warehouse_id
+            - to_warehouse_id
+            - lines
+    responses:
+      '201':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/StockTransferEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+stock_transfers_id:
+  get:
+    operationId: getStockTransfer
+    tags:
+    - Stocks
+    summary: Consulter un transfert
+    description: Consulter un transfert.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/StockTransferEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+  patch:
+    operationId: updateStockTransfer
+    tags:
+    - Stocks
+    summary: Modifier un brouillon
+    description: Modifier un brouillon.
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              note:
+                type:
+                - string
+                - 'null'
+              lines:
+                type: array
+                items:
+                  type: object
+                  required:
+                  - variant_id
+                  - quantity
+                  properties:
+                    variant_id:
+                      $ref: ../components/schemas.yaml#/Ulid
+                    quantity:
+                      type: integer
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/StockTransferEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+stock_transfers_id_confirm:
+  post:
+    operationId: confirmStockTransfer
+    tags:
+    - Stocks
+    summary: 'Confirmer : réserve au dépôt de départ'
+    description: 'Confirmer : réserve au dépôt de départ.'
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/StockTransferEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+stock_transfers_id_ship:
+  post:
+    operationId: shipStockTransfer
+    tags:
+    - Stocks
+    summary: 'Expédier : affectation des lots (FIFO ou manuelle) et sortie'
+    description: 'Expédier : affectation des lots (FIFO ou manuelle) et sortie.'
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              allocations:
+                type: object
+                additionalProperties:
+                  type: object
+                  additionalProperties:
+                    type: integer
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/StockTransferEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+stock_transfers_id_receive:
+  post:
+    operationId: receiveStockTransfer
+    tags:
+    - Stocks
+    summary: Réceptionner (l'écart est déclaré en perte)
+    description: Réceptionner (l'écart est déclaré en perte).
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    - $ref: ../components/parameters.yaml#/IdempotencyKey
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              received:
+                type: object
+                additionalProperties:
+                  type: integer
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/StockTransferEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended
+stock_transfers_id_cancel:
+  post:
+    operationId: cancelStockTransfer
+    tags:
+    - Stocks
+    summary: Annuler (brouillon ou confirmé)
+    description: Annuler (brouillon ou confirmé).
+    parameters:
+    - $ref: ../components/parameters.yaml#/Id
+    responses:
+      '200':
+        description: Succès
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/StockTransferEnvelope
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../components/responses.yaml#/ValidationFailed
+      '423':
+        $ref: ../components/responses.yaml#/CompanySuspended

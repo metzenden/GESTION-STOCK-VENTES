@@ -1,0 +1,12 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 8
+    paths:
+        - app
+        - tools
+    tmpDir: storage/framework/phpstan
+
+rules:
+    - Tools\PHPStan\NoFloatInDomainRule

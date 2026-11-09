@@ -1,0 +1,149 @@
+login:
+  post:
+    operationId: login
+    tags: [Authentification]
+    summary: Connexion (session Sanctum)
+    description: |
+      Appeler d'abord GET /sanctum/csrf-cookie. Limites : 5 essais / 15 min par (e-mail, IP), 20 par IP,
+      3 par compte super-admin. Même réponse pour un e-mail inconnu, un mot de passe faux ou un compte inactif.
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [email, password]
+            properties:
+              email: { type: string, maxLength: 190 }
+              password: { type: string, maxLength: 255 }
+    responses:
+      '200':
+        description: Connecté
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/MeEnvelope' }
+      '422': { $ref: '../components/responses.yaml#/ValidationFailed' }
+      '429': { $ref: '../components/responses.yaml#/TooManyRequests' }
+logout:
+  post:
+    operationId: logout
+    tags: [Authentification]
+    summary: Déconnexion
+    description: "Déconnexion."
+    responses:
+      '204': { description: 'Session fermée' }
+      '401': { $ref: '../components/responses.yaml#/Unauthenticated' }
+me:
+  get:
+    operationId: getMe
+    tags: [Authentification]
+    summary: Utilisateur connecté, entreprise active, permissions et préférences
+    description: "Utilisateur connecté, entreprise active, permissions et préférences."
+    responses:
+      '200':
+        description: Profil
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/MeEnvelope' }
+      '401': { $ref: '../components/responses.yaml#/Unauthenticated' }
+preferences:
+  patch:
+    operationId: updatePreferences
+    tags: [Authentification]
+    summary: Préférences (thème)
+    description: "Préférences (thème)."
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [theme]
+            properties:
+              theme: { $ref: '../components/schemas.yaml#/Theme' }
+    responses:
+      '200':
+        description: Profil à jour
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/MeEnvelope' }
+      '401': { $ref: '../components/responses.yaml#/Unauthenticated' }
+      '422': { $ref: '../components/responses.yaml#/ValidationFailed' }
+forgotPassword:
+  post:
+    operationId: forgotPassword
+    tags: [Authentification]
+    summary: Demande de réinitialisation (réponse constante)
+    description: "Demande de réinitialisation (réponse constante)."
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [email]
+            properties:
+              email: { type: string, maxLength: 190 }
+    responses:
+      '202':
+        description: Demande prise en compte (que l'adresse existe ou non)
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/Message' }
+      '429': { $ref: '../components/responses.yaml#/TooManyRequests' }
+resetPassword:
+  post:
+    operationId: resetPassword
+    tags: [Authentification]
+    summary: Réinitialisation par jeton (usage unique, 60 min) ; ferme toutes les sessions
+    description: "Réinitialisation par jeton (usage unique, 60 min) ; ferme toutes les sessions."
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [token, email, password, password_confirmation]
+            properties:
+              token: { type: string }
+              email: { type: string }
+              password: { type: string, minLength: 12 }
+              password_confirmation: { type: string }
+    responses:
+      '200':
+        description: Mot de passe modifié
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/Message' }
+      '422': { $ref: '../components/responses.yaml#/ValidationFailed' }
+      '429': { $ref: '../components/responses.yaml#/TooManyRequests' }
+acceptInvitation:
+  post:
+    operationId: acceptInvitation
+    tags: [Authentification]
+    summary: Activation d'un compte invité (jeton à usage unique, 72 h) ; ouvre la session
+    description: "Activation d'un compte invité (jeton à usage unique, 72 h) ; ouvre la session."
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [token, name, password, password_confirmation]
+            properties:
+              token: { type: string }
+              name: { type: string, minLength: 2, maxLength: 160 }
+              password: { type: string, minLength: 12 }
+              password_confirmation: { type: string }
+    responses:
+      '201':
+        description: Compte activé et connecté
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/MeEnvelope' }
+      '422': { $ref: '../components/responses.yaml#/ValidationFailed' }
+      '429': { $ref: '../components/responses.yaml#/TooManyRequests' }

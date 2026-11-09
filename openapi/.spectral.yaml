@@ -1,0 +1,17 @@
+extends: ['spectral:oas']
+
+rules:
+  operation-operationId: error
+  operation-description: error
+  operation-tags: error
+  info-contact: off
+
+  # D-004 : aucun endpoint métier n'accepte company_id en entrée (hors administration plateforme /admin).
+  no-company-id-input:
+    description: Le contexte d'entreprise est déterminé par le serveur ; company_id est interdit en entrée.
+    severity: error
+    given: "$.paths[?(!@property.startsWith('/admin'))]..parameters[*].name"
+    then:
+      function: pattern
+      functionOptions:
+        notMatch: '^company_id$'

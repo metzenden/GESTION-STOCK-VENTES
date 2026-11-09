@@ -1,0 +1,25 @@
+{$APP_DOMAIN} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(self), geolocation=(), microphone=()"
+		Content-Security-Policy "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+		-Server
+	}
+
+	# API et cookie CSRF Sanctum vers Laravel (même origine que la SPA, D-043)
+	@backend path /api/* /sanctum/*
+	handle @backend {
+		reverse_proxy nginx:80
+	}
+
+	# Application React compilée
+	handle {
+		root * /srv/spa
+		try_files {path} /index.html
+		file_server
+	}
+}
